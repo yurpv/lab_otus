@@ -1,9 +1,9 @@
 #Автоматизация администрирования. Ansible
 Для лабораторных работ использую Mac OS (m1), система виртуализации vmware Fusion, тестовая vm Debian 12 ARM Vagrantfile и все остальные конфигурационные файл добавлен в репозитроий lab_otus/Ansible
 - Поднял хост с помощью Vagrantfile и проверил доступ по ssh
-# vagrant up
+#vagrant up
 - C помощью команды vagrant ssh-config посмотрел необходимые параметры
-# Ansible % vagrant ssh-config
+#Ansible % vagrant ssh-config
 Host nginx
   HostName 127.0.0.1
   User vagrant
