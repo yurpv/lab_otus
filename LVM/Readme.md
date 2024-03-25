@@ -295,3 +295,51 @@ root@lvm:~# df -Th /data/
 Filesystem            Type  Size  Used Avail Use% Mounted on
 /dev/mapper/otus-test ext4   11G  7.8G  2.6G  76% /data
 ```
+
+- Можно уменьшить существующий LV с помощью команды lvreduce, но перед этим необходимо отмонтировать файловую систему, проверить её на ошибки и уменьшить ее размер:
+
+```
+root@lvm:~# umount /data/
+```
+```
+root@lvm:~# e2fsck -fy /dev/otus/test
+e2fsck 1.46.5 (30-Dec-2021)
+Pass 1: Checking inodes, blocks, and sizes
+Pass 2: Checking directory structure
+Pass 3: Checking directory connectivity
+Pass 4: Checking reference counts
+Pass 5: Checking group summary information
+/dev/otus/test: 12/729088 files (0.0% non-contiguous), 2105907/2914304 blocks
+```
+```
+root@lvm:~# resize2fs /dev/otus/test 10G
+resize2fs 1.46.5 (30-Dec-2021)
+Resizing the filesystem on /dev/otus/test to 2621440 (4k) blocks.
+The filesystem on /dev/otus/test is now 2621440 (4k) blocks long.
+```
+```
+root@lvm:~# lvreduce /dev/otus/test -L 10G
+  WARNING: Reducing active logical volume to 10.00 GiB.
+  THIS MAY DESTROY YOUR DATA (filesystem etc.)
+Do you really want to reduce otus/test? [y/n]: y
+  Size of logical volume otus/test changed from <11.12 GiB (2846 extents) to 10.00 GiB (2560 extents).
+  Logical volume otus/test successfully resized.
+```
+```
+root@lvm:~# mount /dev/otus/test /data/
+```
+
+- Проверим, что ФС и lvm необходимого размера:
+
+```
+root@lvm:~# df -Th /data/
+Filesystem            Type  Size  Used Avail Use% Mounted on
+/dev/mapper/otus-test ext4  9.8G  7.8G  1.6G  84% /data
+```
+```
+root@lvm:~# lvs /dev/otus/test 
+  LV   VG   Attr       LSize  Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  test otus -wi-ao---- 10.00g                                                    
+```
+
+- 
