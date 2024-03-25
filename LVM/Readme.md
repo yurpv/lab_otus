@@ -169,4 +169,31 @@ root@lvm:/home/vagrant# lvs
   ubuntu-lv ubuntu-vg -wi-ao---- 10.00g  
 ```
 
-- 
+- Cоздаем еще один LV из свободного места. На этот раз создадим не экстентами, а абсолютным значением в мегабайтах:
+
+```
+root@lvm:/home/vagrant# lvcreate -L 100M -n small otus
+  Logical volume "small" created.
+root@lvm:/home/vagrant# lvs
+  LV        VG        Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  small     otus      -wi-a----- 100.00m                                                    
+  test      otus      -wi-a-----  <8.00g                                                    
+  ubuntu-lv ubuntu-vg -wi-ao----  10.00g   
+```
+
+- На LV создаем файловую систему и смонтируем:
+
+```
+root@lvm:/home/vagrant# mkfs.ext4 /dev/otus/test 
+mke2fs 1.46.5 (30-Dec-2021)
+Creating filesystem with 2096128 4k blocks and 524288 inodes
+Filesystem UUID: 59949164-7cf7-4eec-9505-dc6369c8ca9f
+Superblock backups stored on blocks: 
+        32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632
+
+Allocating group tables: done                            
+Writing inode tables: done                            
+Creating journal (16384 blocks): done
+Writing superblocks and filesystem accounting information: done 
+```
+
