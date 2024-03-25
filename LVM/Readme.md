@@ -252,3 +252,33 @@ root@lvm:~# df -Th /data/
 Filesystem            Type  Size  Used Avail Use% Mounted on
 /dev/mapper/otus-test ext4  7.8G  7.8G     0 100% /data
 ```
+
+- Увеличиваем LV за счет появившегося свободного места:
+
+```
+root@lvm:~# lvextend -|+80%FREE /dev/otus/test 
+  No command with matching syntax recognised.  Run 'lvextend --help' for more information.
++80%FREE: command not found
+
+root@lvm:~# lvs /dev/otus/test 
+  LV   VG   Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  test otus -wi-ao---- <11.12g
+```
+```
+root@lvm:~# df -Th
+Filesystem                        Type   Size  Used Avail Use% Mounted on
+tmpfs                             tmpfs   97M  1.3M   95M   2% /run
+/dev/mapper/ubuntu--vg-ubuntu--lv ext4   9.8G  3.9G  5.4G  42% /
+tmpfs                             tmpfs  482M     0  482M   0% /dev/shm
+tmpfs                             tmpfs  5.0M     0  5.0M   0% /run/lock
+/dev/nvme0n1p2                    ext4   1.7G  250M  1.4G  16% /boot
+/dev/nvme0n1p1                    vfat   952M  6.4M  945M   1% /boot/efi
+tmpfs                             tmpfs   97M  4.0K   97M   1% /run/user/1000
+/dev/mapper/otus-test             ext4   7.8G  7.8G     0 100% /data     
+```
+
+- Файловая система осталась прежнего размера, воспользуемся командой resize2fs:
+
+```
+
+```
