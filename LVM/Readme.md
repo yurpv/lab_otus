@@ -235,4 +235,20 @@ root@lvm:~# vgs
   otus        2   2   0 wz--n-  11.99g <3.90g
   ubuntu-vg   1   1   0 wz--n- <17.32g <7.32g
 ```
+- Сымитируем занятое место с помощью команды dd:
 
+```
+root@lvm:~# dd if=/dev/zero of=/data/test.log bs=1M \
+ count=8000 status=progress
+7596933120 bytes (7.6 GB, 7.1 GiB) copied, 2 s, 3.8 GB/s
+dd: error writing '/data/test.log': No space left on device
+7944+0 records in
+7943+0 records out
+8329297920 bytes (8.3 GB, 7.8 GiB) copied, 2.19879 s, 3.8 GB/s
+
+  Теперь у нас занято 100% дискового пространства:
+
+root@lvm:~# df -Th /data/
+Filesystem            Type  Size  Used Avail Use% Mounted on
+/dev/mapper/otus-test ext4  7.8G  7.8G     0 100% /data
+```
