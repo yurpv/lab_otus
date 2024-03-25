@@ -276,9 +276,22 @@ tmpfs                             tmpfs  5.0M     0  5.0M   0% /run/lock
 tmpfs                             tmpfs   97M  4.0K   97M   1% /run/user/1000
 /dev/mapper/otus-test             ext4   7.8G  7.8G     0 100% /data     
 ```
+root@lvm:~# df -Th /data/
+Filesystem            Type  Size  Used Avail Use% Mounted on
+/dev/mapper/otus-test ext4  7.8G  7.8G     0 100% /data
+```
 
 - Файловая система осталась прежнего размера, воспользуемся командой resize2fs:
 
 ```
-
+root@lvm:~# resize2fs /dev/otus/test 
+resize2fs 1.46.5 (30-Dec-2021)
+Filesystem at /dev/otus/test is mounted on /data; on-line resizing required
+old_desc_blocks = 1, new_desc_blocks = 2
+The filesystem on /dev/otus/test is now 2914304 (4k) blocks long.
+```
+```
+root@lvm:~# df -Th /data/
+Filesystem            Type  Size  Used Avail Use% Mounted on
+/dev/mapper/otus-test ext4   11G  7.8G  2.6G  76% /data
 ```
