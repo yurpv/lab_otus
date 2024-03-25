@@ -34,9 +34,9 @@ printf "vagrant ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 - После выключил vm:
 ```
-> vagrant halt
+% vagrant halt
 > и запустил с командой 
-> vagrant reload
+% vagrant reload
 > vm запустилась с установленными компанентами
 ```
 
