@@ -3,11 +3,13 @@
 *Для лабораторных работ использую Mac OS (m1), система виртуализации vmware Fusion, тестовая vm Ubuntu 22.04 ARM LVM, Vagrantfile и все остальные конфигурационные файл добавлен в репозитроий lab_otus/LVM*
 
 - Поднял хост с помощью Vagrantfile:
+
 ```
 % vagrant up
 ```
 
 - C помощью команды vagrant ssh-config посмотрел необходимые информацию:
+
 ```
 % vagrant ssh-config
 Host lvm
@@ -25,10 +27,10 @@ Host lvm
 ```
 
 - Далее зашел по ssh на vm, авторизировался sudo su, добавил в файл /etc/sudoers доп параметры:
-  ```
+```
 sudo su
 printf "vagrant ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
-  ```
+```
 
 - Посел выключил vm:
 ```
