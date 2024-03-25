@@ -137,5 +137,36 @@ root@lvm:/home/vagrant# vgdisplay otus
 - Выведем детальную информацию о LV:
 
 ```
+root@lvm:/home/vagrant# lvdisplay /dev/otus/test
+  --- Logical volume ---
+  LV Path                /dev/otus/test
+  LV Name                test
+  VG Name                otus
+  LV UUID                X534dr-SIiG-Iu8A-Tdx0-u96i-vClE-5xOy2y
+  LV Write Access        read/write
+  LV Creation host, time lvm, 2024-03-25 14:28:12 +0000
+  LV Status              available
+  # open                 0
+  LV Size                <8.00 GiB
+  Current LE             2047
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     256
+  Block device           253:1
+```
+
+- Можно вывести краткую информацию:
 
 ```
+root@lvm:/home/vagrant# vgs
+  VG        #PV #LV #SN Attr   VSize   VFree 
+  otus        1   1   0 wz--n- <10.00g  2.00g
+  ubuntu-vg   1   1   0 wz--n- <17.32g <7.32g
+root@lvm:/home/vagrant# lvs
+  LV        VG        Attr       LSize  Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
+  test      otus      -wi-a----- <8.00g                                                    
+  ubuntu-lv ubuntu-vg -wi-ao---- 10.00g  
+```
+
+- 
