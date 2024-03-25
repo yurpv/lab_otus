@@ -34,10 +34,10 @@ printf "vagrant ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 
 - После выключил vm:
 ```
-vagrant halt
-и запустил с командой 
-vagrant reload
-vm запустилась с установленными компанентами
+> vagrant halt
+> и запустил с командой 
+> vagrant reload
+> vm запустилась с установленными компанентами
 ```
 
 ***Так как не нашел решения для добавления дисков через Vagrantfile для VMware Fusion, пришлось сделал это руками.
