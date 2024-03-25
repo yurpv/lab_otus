@@ -46,7 +46,7 @@ vm запустилась с установленными компанентам
 ***Так как не нашел решения для добавления дисков через Vagrantfile для VMware Fusion, пришлось сделал это руками.
  ![image](https://github.com/yurpv/lab_otus/assets/162872411/02646b0e-c385-480d-a553-498dd58aac0e)***
 
- - Определяем какие устройства хотим использовать в качестве Physical Volumes для наших будущих Volume Groups:
+- Определяем какие устройства хотим использовать в качестве Physical Volumes для наших будущих Volume Groups:
 ```
 root@lvm:/home/vagrant# lsblk 
 NAME                      MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
@@ -65,7 +65,7 @@ nvme0n1                   259:0    0    20G  0 disk
   └─ubuntu--vg-ubuntu--lv 253:0    0    10G  0 lvm  /
 ```
 
-Диски sda, sdb будем использовать для базовых вещей и снапшотов:
+- Диски sda, sdb будем использовать для базовых вещей и снапшотов:
 
 ```
 root@lvm:/home/vagrant# lvmdiskscan
@@ -87,6 +87,51 @@ root@lvm:/home/vagrant# lvmdiskscan
   1 LVM physical volume
 ```
 
+- Разметим диск для будущего использования LVM - создадим PV
 
+```
+root@lvm:/home/vagrant# pvcreate /dev/sda
+  Physical volume "/dev/sda" successfully created.
+```
 
+- Cоздаем первый уровень абстракции - VG:
 
+```
+root@lvm:/home/vagrant# vgcreate otus /dev/sda
+  Volume group "otus" successfully created
+```
+
+-  Cоздать Logical Volume
+
+```
+root@lvm:/home/vagrant# lvcreate -l+80%FREE -n test otus
+  Logical volume "test" created.
+```
+
+- Посмотрим информацию о только что созданном Volume Group:
+
+```
+root@lvm:/home/vagrant# vgdisplay otus
+  --- Volume group ---
+  VG Name               otus
+  System ID             
+  Format                lvm2
+  Metadata Areas        1
+  Metadata Sequence No  2
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                1
+  Open LV               0
+  Max PV                0
+  Cur PV                1
+  Act PV                1
+  VG Size               <10.00 GiB
+  PE Size               4.00 MiB
+  Total PE              2559
+  Alloc PE / Size       2047 / <8.00 GiB
+  Free  PE / Size       512 / 2.00 GiB
+  VG UUID               gnK8d3-8Qda-snn0-IPRf-yBpH-HA7Q-54RKCc
+```
+
+- Выведем детальную информацию о LV:
