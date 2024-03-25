@@ -135,3 +135,7 @@ root@lvm:/home/vagrant# vgdisplay otus
 ```
 
 - Выведем детальную информацию о LV:
+
+```
+
+```
