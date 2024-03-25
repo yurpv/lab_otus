@@ -12,6 +12,8 @@
 
 ```
 % vagrant ssh-config
+```
+```
 Host lvm
   HostName 192.168.65.147
   User vagrant
@@ -48,7 +50,9 @@ vm запустилась с установленными компанентам
 
 - Определяем какие устройства хотим использовать в качестве Physical Volumes для наших будущих Volume Groups:
 ```
-root@lvm:/home/vagrant# lsblk 
+root@lvm:/home/vagrant# lsblk
+```
+```
 NAME                      MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
 loop0                       7:0    0  59.2M  1 loop /snap/core20/1977
 loop1                       7:1    0 109.6M  1 loop /snap/lxd/24326
@@ -194,6 +198,41 @@ Superblock backups stored on blocks:
 Allocating group tables: done                            
 Writing inode tables: done                            
 Creating journal (16384 blocks): done
-Writing superblocks and filesystem accounting information: done 
+Writing superblocks and filesystem accounting information: done
+
+root@lvm:~# mkdir /data
+root@lvm:~# mount | grep /data
+/dev/mapper/otus-test on /data type ext4 (rw,relatime)
+```
+
+# Расширение LVM
+
+* Нам необходимо добавить свободного места в директории /data. Мы можем расширить файловую систему на LV /dev/otus/test за счет нового блочного устройства /dev/sdb.*
+
+- Для начала так же необходимо создать PV:
+
+```
+root@lvm:~# pvcreate /dev/sdb 
+  Physical volume "/dev/sdb" successfully created.
+```
+
+- Необходимо расширить VG добавив в него этот диск:
+
+```
+root@lvm:~# vgextend otus /dev/sdb
+  Volume group "otus" successfully extended
+```
+
+- Проверяем, что новый диск присутствует в новой VG и прибавилось место:
+
+```
+root@lvm:~# vgdisplay -v otus | grep 'PV Name'
+  PV Name               /dev/sda     
+  PV Name               /dev/sdb
+
+root@lvm:~# vgs
+  VG        #PV #LV #SN Attr   VSize   VFree 
+  otus        2   2   0 wz--n-  11.99g <3.90g
+  ubuntu-vg   1   1   0 wz--n- <17.32g <7.32g
 ```
 
