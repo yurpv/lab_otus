@@ -413,5 +413,7 @@ nvme0n1                   259:0    0    20G  0 disk
 ├─nvme0n1p1               259:1    0   953M  0 part /boot/efi
 ├─nvme0n1p2               259:2    0   1.8G  0 part /boot
 └─nvme0n1p3               259:3    0  17.3G  0 part 
-  └─ubuntu--vg-ubuntu--lv 253:0    0     8G  0 lvm  /mnt
+  └─ubuntu--vg-ubuntu--lv 253:0    0    10G  0 lvm 
 ```
+
+- Далее изменим размер старой VG и вернуть на него рут. Для этого удаляем старый LV размером в 17.3G и создаём новый на 8G:
