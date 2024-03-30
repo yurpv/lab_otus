@@ -448,3 +448,51 @@ rsync -avxHAX --progress / /mnt
 for i in /proc/ /sys/ /dev/ /run/ /boot/; do mount --bind $i /mnt/$i; done chroot /mnt/
 grub-mkconfig -o /boot/grub/grub.cfg
 ```
+
+- Не выходим из под chroot - заодно перенесем /var.
+
+## Выделить том под /var в зеркало
+
+- На свободных дисках sdc sdd создаем зеркало:
+```
+[root@lvm boot]# pvcreate /dev/sdc /dev/sdd
+  Physical volume "/dev/sdc" successfully created.
+  Physical volume "/dev/sdd" successfully created.
+
+[root@lvm boot]# vgcreate vg_var /dev/sdc /dev/sdd
+  Volume group "vg_var" successfully created
+
+[root@lvm boot]# lvcreate -L 950M -m1 -n lv_var vg_var
+  Rounding up size to full physical extent 952.00 MiB
+  Logical volume "lv_var" created.
+```
+
+- Создаем ФС и перемещаем туда /var:
+```
+[root@lvm boot]# mkfs.ext4 /dev/vg_var/lv_var
+[root@lvm boot]# mount /dev/vg_var/lv_var /mnt
+[root@lvm boot]# cp -aR /var/* /mnt/
+
+- Cохраняем содержимое старого var
+```
+[root@lvm boot]# mkdir /tmp/oldvar && mv /var/* /tmp/oldvar
+```
+
+- Монтируем новый var в каталог /var:
+```
+[root@lvm boot]# umount /mnt
+[root@lvm boot]# mount /dev/vg_var/lv_var /var
+```
+
+- Правим fstab для автоматического монтирования /var:
+```
+[root@lvm boot]# echo "`blkid | grep var: | awk '{print $2}'` \
+ /var ext4 defaults 0 0" >> /etc/fstab
+```
+
+- Можно успешно перезагружать систему в новый (уменьшенный root) и удалять
+временную Volume Group:
+```
+
+```
+
