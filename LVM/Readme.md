@@ -276,13 +276,13 @@ tmpfs                             tmpfs  5.0M     0  5.0M   0% /run/lock
 tmpfs                             tmpfs   97M  4.0K   97M   1% /run/user/1000
 /dev/mapper/otus-test             ext4   7.8G  7.8G     0 100% /data     
 ```
+```
 root@lvm:~# df -Th /data/
 Filesystem            Type  Size  Used Avail Use% Mounted on
 /dev/mapper/otus-test ext4  7.8G  7.8G     0 100% /data
 ```
-```
-- Файловая система осталась прежнего размера, воспользуемся командой resize2fs:
 
+- Файловая система осталась прежнего размера, воспользуемся командой resize2fs:
 ```
 root@lvm:~# resize2fs /dev/otus/test 
 resize2fs 1.46.5 (30-Dec-2021)
@@ -297,7 +297,6 @@ Filesystem            Type  Size  Used Avail Use% Mounted on
 ```
 
 - Можно уменьшить существующий LV с помощью команды lvreduce, но перед этим необходимо отмонтировать файловую систему, проверить её на ошибки и уменьшить ее размер:
-
 ```
 root@lvm:~# umount /data/
 ```
@@ -330,7 +329,6 @@ root@lvm:~# mount /dev/otus/test /data/
 ```
 
 - Проверим, что ФС и lvm необходимого размера:
-
 ```
 root@lvm:~# df -Th /data/
 Filesystem            Type  Size  Used Avail Use% Mounted on
@@ -365,7 +363,6 @@ nvme0n1                   259:0    0    20G  0 disk
   └─ubuntu--vg-ubuntu--lv 253:0    0    10G  0 lvm  /
 
 - Подготовим временный том для / раздела:
-
 ```
 root@lvm:/#  pvcreate /dev/sda
   Physical volume "/dev/sda" successfully created.
@@ -376,7 +373,19 @@ root@lvm:/# lvcreate -n lv_root -l +100%FREE /dev/vg_root
 ```
 
 - Создаем файловую систему и смонтируем, для перенести данных:
-
 ```
 mkfs.ext4 /dev/vg_root/lv_root
+mount /dev/vg_root/lv_root /mnt
 ```
+
+- Для переноса данных используем следующую команду:
+```
+rsync -avxHAX --progress / /mnt
+```
+
+- Заходим в окружение chroot нашего временного корня:
+```
+for i in /proc/ /sys/ /dev/ /run/ /boot/; do mount --bind $i /mnt/$i; done
+chroot /mnt/
+```
+-
