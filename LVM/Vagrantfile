@@ -1,0 +1,37 @@
+MACHINES = {
+  :"lvm" => {
+              :box_name => "edevri/ubuntu22",
+              #:box_version => "2023.11.17",
+              :ip_addr => '192.168.65.146',
+            }
+}
+
+Vagrant.configure("2") do |config|
+  MACHINES.each do |boxname, boxconfig|
+    config.ssh.username = 'vagrant'
+    config.ssh.password = 'vagrant'
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+    config.vm.define boxname do |box|
+      box.vm.box = boxconfig[:box_name]
+      box.vm.box_version = boxconfig[:box_version]
+      box.vm.host_name = boxname.to_s
+      box.vm.network "private_network", ip: boxconfig[:ip_addr]
+      config.vm.provider :vmware_desktop do |vmware|
+        vmware.gui = true
+        vmware.memory = 1024
+        vmware.cpus = 2
+        #vmware.vmx["ethernet0.virtualdev"] = "vmxnet3"
+        vmware.ssh_info_public = true
+        vmware.linked_clone = false
+      end
+
+      box.vm.provision "shell", inline: <<-SHELL
+      sudo -S sh -c 'echo "root:vagrant" | chpasswd'
+      mkdir -p ~root/.ssh
+      cp ~vagrant/.ssh/auth* ~root/.ssh
+      sudo sed -i 's/\#PasswordAuthentication yes/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+      systemctl restart sshd
+    	  SHELL
+          end
+        end
+      end
