@@ -344,6 +344,7 @@ root@lvm:~# lvs /dev/otus/test
 ## 1. Уменьшить том под / до 8G
 Перед выполнение дз сделал снапшот VM, для мозможности вернуться к чистой системе
 проверим файловую систему
+```
 root@lvm:~# lsblk 
 NAME                      MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
 loop0                       7:0    0  46.4M  1 loop /snap/snapd/19459
@@ -361,7 +362,7 @@ nvme0n1                   259:0    0    20G  0 disk
 ├─nvme0n1p2               259:2    0   1.8G  0 part /boot
 └─nvme0n1p3               259:3    0  17.3G  0 part 
   └─ubuntu--vg-ubuntu--lv 253:0    0    10G  0 lvm  /
-
+```
 - Подготовим временный том для / раздела:
 ```
 root@lvm:/#  pvcreate /dev/sda
@@ -472,6 +473,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 [root@lvm boot]# mkfs.ext4 /dev/vg_var/lv_var
 [root@lvm boot]# mount /dev/vg_var/lv_var /mnt
 [root@lvm boot]# cp -aR /var/* /mnt/
+```
 
 - Cохраняем содержимое старого var
 ```
