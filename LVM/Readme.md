@@ -372,7 +372,7 @@ root@lvm:/# lvcreate -n lv_root -l +100%FREE /dev/vg_root
   Logical volume "lv_root" created.
 ```
 
-- Создаем файловую систему и смонтируем, для перенести данных:
+- Создаем файловую систему и смонтируем, для перенрса данных:
 ```
 mkfs.ext4 /dev/vg_root/lv_root
 mount /dev/vg_root/lv_root /mnt
@@ -381,12 +381,20 @@ mount /dev/vg_root/lv_root /mnt
 - Для переноса данных используем следующую команду:
 ```
 rsync -avxHAX --progress / /mnt
+
+The options are:
+
+-a  : all files, with permissions, etc..
+-v  : verbose, mention files
+-x  : stay on one file system
+-H  : preserve hard links (not included with -a)
+-A  : preserve ACLs/permissions (not included with -a)
+-X  : preserve extended attributes (not included with -a)
 ```
 
 - Заходим в окружение chroot нашего временного корня:
 ```
-for i in /proc/ /sys/ /dev/ /run/ /boot/; do mount --bind $i /mnt/$i; done
-chroot /mnt/
+for i in /proc/ /sys/ /dev/ /run/ /boot/; do mount --bind $i /mnt/$i; done chroot /mnt/
 ```
 
 - Запишем новый загрузчик:
@@ -417,3 +425,26 @@ nvme0n1                   259:0    0    20G  0 disk
 ```
 
 - Далее изменим размер старой VG и вернуть на него рут. Для этого удаляем старый LV размером в 17.3G и создаём новый на 8G:
+```
+root@lvm:/# lvremove /dev/ubuntu-vg/ubuntu-lv 
+Do you really want to remove and DISCARD active logical volume ubuntu-vg/ubuntu-lv? [y/n]: y
+  Logical volume "ubuntu-lv" successfully removed
+
+root@lvm:/# lvcreate -n ubuntu-vg/ubuntu-lv -L 8G /dev/ubuntu-vg
+WARNING: ext4 signature detected on /dev/ubuntu-vg/ubuntu-lv at offset 1080. Wipe it? [y/n]: y
+  Wiping ext4 signature on /dev/ubuntu-vg/ubuntu-lv.
+  Logical volume "ubuntu-lv" created.
+```
+
+- Создаем файловую систему и смонтируем, для перенрса данных:
+```
+mkfs.ext4 /dev/ubuntu-vg/ubuntu-lv
+mount /dev/ubuntu-vg/ubuntu-lv /mnt
+rsync -avxHAX --progress / /mnt
+```
+
+- Так же как в первый раз cконфигурируем grub, за исключением правки:
+```
+for i in /proc/ /sys/ /dev/ /run/ /boot/; do mount --bind $i /mnt/$i; done chroot /mnt/
+grub-mkconfig -o /boot/grub/grub.cfg
+```
