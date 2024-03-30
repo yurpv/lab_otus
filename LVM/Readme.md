@@ -610,8 +610,8 @@ root@lvm:~# lvcreate -L 90MB -s -n home_snap /dev/vg_home/lv_home
 root@lvm:~# rm -f /home/file{11..20}
 ```
 
-Процесс восстановления из снапшота:
-
+- Процесс восстановления из снапшота:
+```
 root@lvm:~# umount /home
 root@lvm:~# lvconvert --merge /dev/vg_home/home_snap 
   Merging of volume vg_home/home_snap started.
@@ -643,3 +643,4 @@ drwxr-xr-x 19 root    root     4096 Mar 29 15:41 ..
 -rw-r--r--  1 root    root        0 Mar 29 21:24 file9
 drwx------  2 root    root    16384 Mar 29 21:21 lost+found
 drwxr-x---  4 vagrant vagrant  4096 Mar 29 12:42 vagrant
+```
