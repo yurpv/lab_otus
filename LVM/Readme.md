@@ -388,4 +388,30 @@ rsync -avxHAX --progress / /mnt
 for i in /proc/ /sys/ /dev/ /run/ /boot/; do mount --bind $i /mnt/$i; done
 chroot /mnt/
 ```
--
+
+- Запишем новый загрузчик:
+```
+grub-mkconfig -o /boot/grub/grub.cfg
+```
+
+- Проверем файловую систему, теперь корневой раздел на sda:
+```
+root@lvm:/home/vagrant# lsblk 
+NAME                      MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+loop0                       7:0    0  59.2M  1 loop /snap/core20/1977
+loop1                       7:1    0  59.7M  1 loop /snap/core20/2186
+loop2                       7:2    0 109.6M  1 loop /snap/lxd/24326
+loop3                       7:3    0  77.4M  1 loop /snap/lxd/27950
+loop4                       7:4    0  46.4M  1 loop /snap/snapd/19459
+loop5                       7:5    0    34M  1 loop /snap/snapd/21185
+sda                         8:0    0    10G  0 disk 
+└─vg_root-lv_root         253:1    0    10G  0 lvm  /
+sdb                         8:16   0     2G  0 disk 
+sdc                         8:32   0     1G  0 disk 
+sdd                         8:48   0     1G  0 disk 
+nvme0n1                   259:0    0    20G  0 disk 
+├─nvme0n1p1               259:1    0   953M  0 part /boot/efi
+├─nvme0n1p2               259:2    0   1.8G  0 part /boot
+└─nvme0n1p3               259:3    0  17.3G  0 part 
+  └─ubuntu--vg-ubuntu--lv 253:0    0     8G  0 lvm  /mnt
+```
