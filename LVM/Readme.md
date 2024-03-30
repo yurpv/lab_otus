@@ -404,7 +404,7 @@ grub-mkconfig -o /boot/grub/grub.cfg
 
 - Проверем файловую систему, теперь корневой раздел на sda:
 ```
-root@lvm:/home/vagrant# lsblk 
+root@lvm:~#/home/vagrant# lsblk 
 NAME                      MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
 loop0                       7:0    0  59.2M  1 loop /snap/core20/1977
 loop1                       7:1    0  59.7M  1 loop /snap/core20/2186
@@ -426,11 +426,11 @@ nvme0n1                   259:0    0    20G  0 disk
 
 - Далее изменим размер старой VG и вернуть на него рут. Для этого удаляем старый LV размером в 17.3G и создаём новый на 8G:
 ```
-root@lvm:/# lvremove /dev/ubuntu-vg/ubuntu-lv 
+root@lvm:~# lvremove /dev/ubuntu-vg/ubuntu-lv 
 Do you really want to remove and DISCARD active logical volume ubuntu-vg/ubuntu-lv? [y/n]: y
   Logical volume "ubuntu-lv" successfully removed
 
-root@lvm:/# lvcreate -n ubuntu-vg/ubuntu-lv -L 8G /dev/ubuntu-vg
+root@lvm:~# lvcreate -n ubuntu-vg/ubuntu-lv -L 8G /dev/ubuntu-vg
 WARNING: ext4 signature detected on /dev/ubuntu-vg/ubuntu-lv at offset 1080. Wipe it? [y/n]: y
   Wiping ext4 signature on /dev/ubuntu-vg/ubuntu-lv.
   Logical volume "ubuntu-lv" created.
@@ -491,8 +491,153 @@ grub-mkconfig -o /boot/grub/grub.cfg
 ```
 
 - Можно успешно перезагружать систему в новый (уменьшенный root) и удалять
-временную Volume Group:
-```
+временную Volume Group
 
 ```
+lvremove /dev/vg_root/lv_root
+Do you really want to remove active logical volume vg_root/lv_root? [y/n]: y
+  Logical volume "lv_root" successfully removed
 
+root@lvm:~# vgremove /dev/vg_root
+  Volume group "vg_root" successfully removed
+
+root@lvm:~# pvremove /dev/sda
+  Labels on physical volume "/dev/sda" successfully wiped.
+
+root@lvm:~# lsblk 
+NAME                      MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+loop1                       7:1    0 109.6M  1 loop /snap/lxd/24326
+loop2                       7:2    0  46.4M  1 loop /snap/snapd/19459
+sda                         8:0    0    10G  0 disk
+sdb                         8:16   0     2G  0 disk 
+sdc                         8:32   0     1G  0 disk 
+├─vg_var-lv_var_rmeta_0   253:2    0     4M  0 lvm  
+│ └─vg_var-lv_var         253:6    0   952M  0 lvm  /var
+└─vg_var-lv_var_rimage_0  253:3    0   952M  0 lvm  
+  └─vg_var-lv_var         253:6    0   952M  0 lvm  /var
+sdd                         8:48   0     1G  0 disk 
+├─vg_var-lv_var_rmeta_1   253:4    0     4M  0 lvm  
+│ └─vg_var-lv_var         253:6    0   952M  0 lvm  /var
+└─vg_var-lv_var_rimage_1  253:5    0   952M  0 lvm  
+  └─vg_var-lv_var         253:6    0   952M  0 lvm  /var
+nvme0n1                   259:0    0    20G  0 disk 
+├─nvme0n1p1               259:1    0   953M  0 part /boot/efi
+├─nvme0n1p2               259:2    0   1.8G  0 part /boot
+└─nvme0n1p3               259:3    0  17.3G  0 part 
+  └─ubuntu--vg-ubuntu--lv 253:0    0     8G  0 lvm  /
+```
+
+## Выделить том под /home
+
+- Выделяем том под /home по тому же принципу что делали для /var:
+```
+root@lvm:~# lvcreate -n lv_home -L 1.9G /dev/vg_home
+  Rounding up size to full physical extent 1.90 GiB
+  Logical volume "lv_home" created.
+
+root@lvm:~# mkfs.ext4 /dev/vg_home/lv_home 
+mke2fs 1.46.5 (30-Dec-2021)
+Creating filesystem with 498688 4k blocks and 124672 inodes
+Filesystem UUID: 59c75a34-5081-45ad-a36f-5a2689f0badd
+Superblock backups stored on blocks: 
+        32768, 98304, 163840, 229376, 294912
+
+Allocating group tables: done                            
+Writing inode tables: done                            
+Creating journal (8192 blocks): done
+Writing superblocks and filesystem accounting information: done 
+
+root@lvm:~# mount /dev/vg_home/lv_home /mnt/
+
+root@lvm:~# cp -aR /home/* /mnt/
+root@lvm:~# ls /mnt/
+lost+found  vagrant
+root@lvm:~# rm -rf /home/*
+
+root@lvm:~# umount /mnt
+
+root@lvm:~# mount /dev/vg_home/lv_home /home/
+```
+
+- Правим fstab для автоматического монтирования /home:
+```
+echo "`blkid | grep Home | awk '{print $2}'` \
+ /home xfs defaults 0 0" >> /etc/fstab
+```
+```
+root@lvm:~# lsblk 
+NAME                      MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+loop1                       7:1    0 109.6M  1 loop /snap/lxd/24326
+loop2                       7:2    0  46.4M  1 loop /snap/snapd/19459
+sda                         8:0    0    10G  0 disk 
+sdb                         8:16   0     2G  0 disk 
+└─vg_home-lv_home         253:1    0   1.9G  0 lvm  /home
+sdc                         8:32   0     1G  0 disk 
+├─vg_var-lv_var_rmeta_0   253:2    0     4M  0 lvm  
+│ └─vg_var-lv_var         253:6    0   952M  0 lvm  /var
+└─vg_var-lv_var_rimage_0  253:3    0   952M  0 lvm  
+  └─vg_var-lv_var         253:6    0   952M  0 lvm  /var
+sdd                         8:48   0     1G  0 disk 
+├─vg_var-lv_var_rmeta_1   253:4    0     4M  0 lvm  
+│ └─vg_var-lv_var         253:6    0   952M  0 lvm  /var
+└─vg_var-lv_var_rimage_1  253:5    0   952M  0 lvm  
+  └─vg_var-lv_var         253:6    0   952M  0 lvm  /var
+nvme0n1                   259:0    0    20G  0 disk 
+├─nvme0n1p1               259:1    0   953M  0 part /boot/efi
+├─nvme0n1p2               259:2    0   1.8G  0 part /boot
+└─nvme0n1p3               259:3    0  17.3G  0 part 
+  └─ubuntu--vg-ubuntu--lv 253:0    0     8G  0 lvm  /
+```
+
+## Работа со снапшотами
+- Генерируем файлы в /home/:
+```
+root@lvm:~# touch /home/file{1..20}
+```
+
+- Снимаем снапшот:
+```
+Volume group "vg_home" has insufficient free space (24 extents): 25 required.
+root@lvm:~# lvcreate -L 90MB -s -n home_snap /dev/vg_home/lv_home
+  Rounding up size to full physical extent 92.00 MiB
+  Logical volume "home_snap" created.
+```
+
+- Удаляем часть файлов:
+```
+root@lvm:~# rm -f /home/file{11..20}
+```
+
+Процесс восстановления из снапшота:
+
+root@lvm:~# umount /home
+root@lvm:~# lvconvert --merge /dev/vg_home/home_snap 
+  Merging of volume vg_home/home_snap started.
+  vg_home/lv_home: Merged: 100.00%
+root@lvm:~# mount /dev/vg_home/lv_home /home/
+root@lvm:~# ls -al /home/
+total 28
+drwxr-xr-x  4 root    root     4096 Mar 29 21:24 .
+drwxr-xr-x 19 root    root     4096 Mar 29 15:41 ..
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file1
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file10
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file11
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file12
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file13
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file14
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file15
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file16
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file17
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file18
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file19
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file2
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file20
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file3
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file4
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file5
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file6
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file7
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file8
+-rw-r--r--  1 root    root        0 Mar 29 21:24 file9
+drwx------  2 root    root    16384 Mar 29 21:21 lost+found
+drwxr-x---  4 vagrant vagrant  4096 Mar 29 12:42 vagrant
