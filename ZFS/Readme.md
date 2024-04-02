@@ -27,3 +27,34 @@ Host zfs
   PubkeyAcceptedKeyTypes +ssh-rsa
   HostKeyAlgorithms +ssh-rsa
 ```
+
+- Определение алгоритма с наилучшим сжатием.
+```
+root@zfs:~# lsblk 
+NAME                      MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+loop0                       7:0    0  59.7M  1 loop /snap/core20/2186
+loop1                       7:1    0  59.2M  1 loop /snap/core20/1977
+loop2                       7:2    0 109.6M  1 loop /snap/lxd/24326
+loop3                       7:3    0  77.4M  1 loop /snap/lxd/27950
+loop4                       7:4    0  46.4M  1 loop /snap/snapd/19459
+sda                         8:0    0   512M  0 disk 
+sdb                         8:16   0   512M  0 disk 
+sdc                         8:32   0   512M  0 disk 
+sdd                         8:48   0   512M  0 disk 
+sde                         8:64   0   512M  0 disk 
+sdf                         8:80   0   512M  0 disk 
+sdg                         8:96   0   512M  0 disk 
+sdh                         8:112  0   512M  0 disk
+```
+
+- Создаём пул из двух дисков в режиме RAID 1:
+```
+root@zfs:~# zpool create otus1 mirror /dev/sda /dev/sdb
+```
+
+- Создадим ещё 3 пула:
+```
+root@zfs:~# zpool create otus2 mirror /dev/sdc /dev/sdd
+root@zfs:~# zpool create otus3 mirror /dev/sde /dev/sdf
+root@zfs:~# zpool create otus4 mirror /dev/sdg /dev/sdh
+```
