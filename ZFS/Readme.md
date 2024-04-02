@@ -70,7 +70,7 @@ otus4   480M   100K   480M        -         -     0%     0%  1.00x    ONLINE  -
 ```
 
 - Добавим разные алгоритмы сжатия в каждую файловую систему:
-  > Алгоритм lzjb: zfs set compression=lzjb otus1
-  > Алгоритм lz4:  zfs set compression=lz4 otus2
-  > Алгоритм gzip: zfs set compression=gzip-9 otus3
-  > Алгоритм zle:  zfs set compression=zle otus4
+  - Алгоритм lzjb: zfs set compression=lzjb otus1
+  - Алгоритм lz4:  zfs set compression=lz4 otus2
+  -  Алгоритм gzip: zfs set compression=gzip-9 otus3
+  -  Алгоритм zle:  zfs set compression=zle otus4
