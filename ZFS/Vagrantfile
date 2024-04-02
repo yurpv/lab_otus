@@ -1,0 +1,47 @@
+MACHINES = {
+  :"zfs" => {
+              :box_name => "edevri/ubuntu22",
+              :box_version => "4",
+              :ip_addr => '192.168.65.148',
+            }
+}
+
+Vagrant.configure("2") do |config|
+  MACHINES.each do |boxname, boxconfig|
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+    config.vm.define boxname do |box|
+      box.vm.box = boxconfig[:box_name]
+      box.vm.box_version = boxconfig[:box_version]
+      box.vm.host_name = boxname.to_s
+      box.vm.network "private_network", ip: boxconfig[:ip_addr]
+      config.vm.provider :vmware_desktop do |vmware, override|
+        vmware.gui = true
+        vmware.memory = 1024
+        vmware.cpus = 2
+        vdiskmanager = '/Applications/VMware\ Fusion.app/Contents/Library/vmware-vdiskmanager'
+        { 0 => 512, 1 => 512, 2 => 512, 3 => 512, 4 => 512, 5 => 512, 6 => 512, 7 => 512, 9 => 512 }.each do |disk, size|
+          unless File.exists?( ".vagrant/#{disk}.vmdk" )
+            `#{vdiskmanager} -c -s #{size}MB -a lsilogic -t 1 .vagrant/#{disk}.vmdk`
+          end
+        vmware.vmx["sata0:#{disk}.filename"] = "#{File.dirname(__FILE__)}/.vagrant/#{disk}.vmdk"
+        vmware.vmx["sata0:#{disk}.present"] = true
+        #vmware.vmx["ethernet0.virtualdev"] = "vmxnet3"
+        vmware.ssh_info_public = true
+        vmware.linked_clone = false
+        end
+      end
+
+box.vm.provision "shell", inline: <<-SHELL
+  sudo mkdir -p ~root/.ssh
+  sudo cp ~vagrant/.ssh/auth* ~root/.ssh
+  sudo sed -i 's/\#PasswordAuthentication yes/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+  sudo systemctl restart sshd
+  sudo apt -y update
+  sudo apt -y upgrade
+  wget http://launchpadlibrarian.net/712484651/zfsutils-linux_2.1.5-1ubuntu6~22.04.3_arm64.deb
+  apt install -y ./zfsutils-linux_2.1.5-1ubuntu6~22.04.3_arm64.deb
+  sudo modprobe zfs
+  SHELL
+  end
+  end
+end
