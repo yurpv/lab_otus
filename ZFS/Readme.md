@@ -318,4 +318,23 @@ otus  pbkdf2iters           0                      default
 otus  special_small_blocks  0                      default
 ```
 
-- 
+- C помощью команды grep можно уточнить конкретный параметр:
+```
+root@zfs:~# zfs get available otus
+NAME  PROPERTY   VALUE  SOURCE
+otus  available  350M   -
+root@zfs:~# zfs get readonly otus
+NAME  PROPERTY  VALUE   SOURCE
+otus  readonly  off     default
+root@zfs:~# zfs get recordsize otus
+NAME  PROPERTY    VALUE    SOURCE
+otus  recordsize  128K     local
+root@zfs:~# zfs get compression otus
+NAME  PROPERTY     VALUE           SOURCE
+otus  compression  zle             local
+root@zfs:~# zfs get checksum otus
+NAME  PROPERTY  VALUE      SOURCE
+otus  checksum  sha256     local
+```
+
+-
