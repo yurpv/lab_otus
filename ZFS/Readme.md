@@ -337,4 +337,41 @@ NAME  PROPERTY  VALUE      SOURCE
 otus  checksum  sha256     local
 ```
 
--
+## Работа со снапшотом, поиск сообщения от преподавателя
+
+- Скачаем файл:
+```
+root@zfs:~# zfs get checksum otus
+NAME  PROPERTY  VALUE      SOURCE
+otus  checksum  sha256     local
+root@zfs:~# wget -O otus_task2.file --no-check-certificate https://drive.usercontent.google.com/download?id=1wgxjih8YZ-cqLqaZVa0lA3h3Y029c3oI&export=download
+[1] 47674
+root@zfs:~# 
+Redirecting output to ‘wget-log’.
+[1]+  Done                    wget -O otus_task2.file --no-check-certificate https://drive.usercontent.google.com/download?id=1wgxjih8YZ-cqLqaZVa0lA3h3Y029c3oI
+```
+
+- Восстановим файловую систему из снапшота:
+```
+zfs receive otus/test@today < otus_task2.file
+```
+
+- Далее, ищем в каталоге /otus/test файл с именем “secret_message”:
+```
+root@zfs:~# sudo find /otus/test -name "secret_message"
+/otus/test/task1/file_mess/secret_message
+/otus/test/task1/file_mess/secret_message
+```
+
+- Смотрим содержимое найденного файла:
+```
+root@zfs:~# cat /otus/test/task1/file_mess/secret_message
+https://otus.ru/lessons/linux-hl/
+https://otus.ru/lessons/linux-hl/
+```
+
+- Смотрим содержимое найденного файла:
+```
+root@zfs:~# cat /otus/test/task1/file_mess/secret_message
+https://otus.ru/lessons/linux-hl/
+```
