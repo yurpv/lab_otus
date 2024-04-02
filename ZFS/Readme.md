@@ -118,4 +118,59 @@ otus1  21.7M   330M     21.6M  /otus1
 otus2  17.7M   334M     17.6M  /otus2
 otus3  10.8M   341M     10.7M  /otus3
 otus4  39.3M   313M     39.2M  /otus4
+
+root@zfs:~# zfs get all | grep compressratio | grep -v ref
+otus1  compressratio         1.82x                  -
+otus2  compressratio         2.23x                  -
+otus3  compressratio         3.66x                  -
+otus4  compressratio         1.00x                  -
+```
+
+## Определение настроек пула
+
+- Скачиваем архив в домашний каталог:
+```
+root@zfs:~# wget -O archive.tar.gz --no-check-certificate 'https://drive.usercontent.google.com/download?id=1MvrcEp-WgAQe57aDEzxSRalPAwbNN1Bb&export=download'
+--2024-04-02 11:59:08--  https://drive.usercontent.google.com/download?id=1MvrcEp-WgAQe57aDEzxSRalPAwbNN1Bb&export=download
+Resolving drive.usercontent.google.com (drive.usercontent.google.com)... 216.58.211.225, 2a00:1450:4026:808::2001
+Connecting to drive.usercontent.google.com (drive.usercontent.google.com)|216.58.211.225|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 7275140 (6.9M) [application/octet-stream]
+Saving to: ‘archive.tar.gz’
+
+archive.tar.gz                              100%[===========================================================================================>]   6.94M  2.63MB/s    in 2.6s    
+
+2024-04-02 11:59:18 (2.63 MB/s) - ‘archive.tar.gz’ saved [7275140/7275140]
+```
+
+- Распакуем его:
+```
+root@zfs:~# tar -xzvf archive.tar.gz
+zpoolexport/
+zpoolexport/filea
+zpoolexport/fileb
+```
+
+- Проверим, возможно ли импортировать данный каталог в пул:
+```
+root@zfs:~# zpool import -d zpoolexport/
+   pool: otus
+     id: 6554193320433390805
+  state: ONLINE
+status: Some supported features are not enabled on the pool.
+        (Note that they may be intentionally disabled if the
+        'compatibility' property is set.)
+ action: The pool can be imported using its name or numeric identifier, though
+        some features will not be available without an explicit 'zpool upgrade'.
+ config:
+
+        otus                         ONLINE
+          mirror-0                   ONLINE
+            /root/zpoolexport/filea  ONLINE
+            /root/zpoolexport/fileb  ONLINE
+```
+
+- Сделаем импорт данного пула к нам в ОС:
+```
+
 ```
