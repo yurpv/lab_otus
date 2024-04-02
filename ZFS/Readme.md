@@ -58,3 +58,19 @@ root@zfs:~# zpool create otus2 mirror /dev/sdc /dev/sdd
 root@zfs:~# zpool create otus3 mirror /dev/sde /dev/sdf
 root@zfs:~# zpool create otus4 mirror /dev/sdg /dev/sdh
 ```
+
+- Смотрим информацию о пулах: zpool list
+```
+root@zfs:~# zpool list
+NAME    SIZE  ALLOC   FREE  CKPOINT  EXPANDSZ   FRAG    CAP  DEDUP    HEALTH  ALTROOT
+otus1   480M   100K   480M        -         -     0%     0%  1.00x    ONLINE  -
+otus2   480M   104K   480M        -         -     0%     0%  1.00x    ONLINE  -
+otus3   480M   100K   480M        -         -     0%     0%  1.00x    ONLINE  -
+otus4   480M   100K   480M        -         -     0%     0%  1.00x    ONLINE  -
+```
+
+- Добавим разные алгоритмы сжатия в каждую файловую систему:
+  < Алгоритм lzjb: zfs set compression=lzjb otus1
+  < Алгоритм lz4:  zfs set compression=lz4 otus2
+  < Алгоритм gzip: zfs set compression=gzip-9 otus3
+  < Алгоритм zle:  zfs set compression=zle otus4
