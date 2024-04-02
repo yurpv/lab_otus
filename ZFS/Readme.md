@@ -74,3 +74,48 @@ otus4   480M   100K   480M        -         -     0%     0%  1.00x    ONLINE  -
   - Алгоритм lz4:  zfs set compression=lz4 otus2
   -  Алгоритм gzip: zfs set compression=gzip-9 otus3
   -  Алгоритм zle:  zfs set compression=zle otus4
+ 
+- Проверим, что все файловые системы имеют разные методы сжатия:
+```
+root@zfs:~# zfs get all | grep compression
+otus1  compression           lzjb                   local
+otus2  compression           lz4                    local
+otus3  compression           gzip-9                 local
+otus4  compression           zle                    local
+```
+
+- Скачаем один и тот же текстовый файл во все пулы:
+```
+root@zfs:~# for i in {1..4}; do wget -P /otus$i https://gutenberg.org/cache/epub/2600/pg2600.converter.log; done
+```
+
+- Проверим, что файл был скачан во все пулы:
+```
+root@zfs:~# ls -l /otus*
+/otus1:
+total 22075
+-rw-r--r-- 1 root root 41034307 Apr  2 07:54 pg2600.converter.log
+
+/otus2:
+total 17997
+-rw-r--r-- 1 root root 41034307 Apr  2 07:54 pg2600.converter.log
+
+/otus3:
+total 10961
+-rw-r--r-- 1 root root 41034307 Apr  2 07:54 pg2600.converter.log
+
+/otus4:
+total 40100
+-rw-r--r-- 1 root root 41034307 Apr  2 07:54 pg2600.converter.log
+root@zfs:~# 
+```
+
+- Проверим, сколько места занимает один и тот же файл в разных пулах и проверим степень сжатия файлов:
+```
+root@zfs:~# zfs list
+NAME    USED  AVAIL     REFER  MOUNTPOINT
+otus1  21.7M   330M     21.6M  /otus1
+otus2  17.7M   334M     17.6M  /otus2
+otus3  10.8M   341M     10.7M  /otus3
+otus4  39.3M   313M     39.2M  /otus4
+```
