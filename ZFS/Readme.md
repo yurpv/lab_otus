@@ -28,6 +28,21 @@ Host zfs
   HostKeyAlgorithms +ssh-rsa
 ```
 
+- Далее зашел по ssh на vm, установил sudo и добавил в файл /etc/sudoers доп параметры
+```
+ % printf "vagrant ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+```
+- После выключил vm:
+```
+% vagrant halt
+
+ и запустил с командой
+
+% vagrant reload
+
+vm запустилась с установленными компанентами
+```
+
 - Определение алгоритма с наилучшим сжатием.
 ```
 root@zfs:~# lsblk 
