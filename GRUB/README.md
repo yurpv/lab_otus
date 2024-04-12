@@ -82,10 +82,22 @@ mount -o remount,rw /
 - Монтируем sysroot и меняем пароль
 <img width="511" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/e8d114fb-270c-467e-a8e6-5854a2196291">
 
-##
+##Установить систему с LVM, после чего переименовать VG
 
+- Проверим текущее состояние системы
+```
+root@GRUB:~# vgs
+  VG        #PV #LV #SN Attr   VSize   VFree 
+  ubuntu-vg   1   1   0 wz--n- <17.32g <7.32g
+```
 
+- Нас интересует вторая строка с именем Volume Group
+```
+root@GRUB:~# vgrename ubuntu-vg OtusRoot
+  Volume group "ubuntu-vg" successfully renamed to "OtusRoot"
+```
 
-
+- Далее правим /etc/fstab, /etc/default/grub, /boot/grub2/grub.cfg. Везде заменяем старое
+название на новое.
 
 
