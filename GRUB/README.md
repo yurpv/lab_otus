@@ -32,7 +32,7 @@ GRUB % vagrant up
  % printf "vagrant ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 ```
 
-- Проверяем загрузчик
+- Проверяем тайм-аута GRUB
 ```
 vagrant@GRUB:~$ cat /etc/default/grub
 ```
@@ -49,3 +49,20 @@ GRUB_DISTRIBUTOR=`lsb_release -i -s 2> /dev/null || echo Debian`
 GRUB_CMDLINE_LINUX_DEFAULT=""
 GRUB_CMDLINE_LINUX=""
 ```
+
+- Перезагружаем vm и ждем меню GRUB
+
+  <img width="1022" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/ea79baed-e9d1-4329-90f6-e674ddff3344">
+
+- Выбираем нужную OS и наживаем E
+
+- Далее ищем строку похожую на linux - linux16, это зависит от дистрибутива и прописываем в конце следующие строки
+```
+rw init=/bin/bas
+```
+
+- Нажимаем ctrl+X или F10, тут как удобно.
+
+<img width="1021" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/0c7057fd-1665-49e5-8adb-452dd39fe6e1">
+
+
