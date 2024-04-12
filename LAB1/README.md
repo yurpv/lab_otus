@@ -1,7 +1,7 @@
 #Create Debian12.1-arm64 VM
 
 *Для лабораторных работ использую Mac OS (m1), система виртуализации vmware Fusion, тестовая vm Debian 12 ARM,
-*Vagrantfile добавлен в репозитроий lab_otus*
+*Vagrantfile добавлен в репозитроий lab_otus/LAB1*
 
 #Обновление ядра:
 
