@@ -1,6 +1,6 @@
 # GRUB
 
-*Для лабораторных работ использую Mac OS (m1), система виртуализации vmware Fusion, тестовая vm Ubuntu 22.04 ARM LVM, Vagrantfile и все остальные конфигурационные файл добавлен в репозитроий lab_otus/ZFS*
+*Для лабораторных работ использую Mac OS (m1), система виртуализации vmware Fusion, тестовая vm Ubuntu 22.04 ARM LVM, Vagrantfile и все остальные конфигурационные файл добавлен в репозитроий lab_otus/GRUB*
 
 - C помощью команды vagrant ssh-config посмотрел необходимые информацию:
 
@@ -73,5 +73,19 @@ rw init=/bin/bas
 ```
 mount -o remount,rw /
 ```
+
+- На Ubuntu команда rd.break не заработала, но зато хорошо отработала в Almalinux
+
+<img width="703" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/6b98a3c8-ddb1-468d-b37c-488831ed7c63">
+<img width="703" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/6493105e-eb1c-4f66-8355-91c0a840dad3">
+
+- Монтируем sysroot и меняем пароль
+<img width="511" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/e8d114fb-270c-467e-a8e6-5854a2196291">
+
+##
+
+
+
+
 
 
