@@ -65,4 +65,13 @@ rw init=/bin/bas
 
 <img width="1021" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/0c7057fd-1665-49e5-8adb-452dd39fe6e1">
 
+- Меняем пароль от пользователя vagrant
+
+<img width="301" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/61fbefc8-c473-4118-a5e5-af2da067057f">
+
+- Можно было загрузится в систему с параметром ro, догда бы пришлось монтироват рутовую файловую систему и после тогда можно было поменять пароль
+```
+mount -o remount,rw /
+```
+
 
