@@ -197,3 +197,57 @@ WantedBy=multi-user.target
            ├─54267 /usr/bin/php-cgi
            ├─54268 /usr/bin/php-cgi
 ```
+
+## Дополнить юнит-файл apache httpd возможностью запустить несколько инстансов сервера с разными конфигами
+
+- Для запуска нескольких экземпляров сервиса будем использовать шаблон в конфигурации файла окружения (/usr/lib/systemd/system/httpd.service )
+```
+vi /usr/lib/systemd/system/httpd.service
+---
+[Unit]
+Description=The Apache HTTP Server
+Wants=httpd-init.service
+
+After=network.target remote-fs.target nss-lookup.target httpd-
+init.service
+
+Documentation=man:httpd.service(8)
+
+[Service]
+Type=notify
+Environment=LANG=C
+EnvironmentFile=/etc/sysconfig/httpd-%I
+ExecStart=/usr/sbin/httpd $OPTIONS -DFOREGROUND
+ExecReload=/usr/sbin/httpd $OPTIONS -k graceful
+# Send SIGWINCH for graceful stop
+KillSignal=SIGWINCH
+KillMode=mixed
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+```
+
+- В самом файле окружения (которых будет два) задается опция для запуска веб-сервера с необходимым конфигурационным файлом
+```
+[root@test ~]# vi /etc/sysconfig/httpd-first
+---
+OPTIONS=-f conf/first.conf
+
+[root@test ~]# vi /etc/sysconfig/httpd-second
+---
+OPTIONS=-f conf/second.conf
+```
+
+- В директории с конфигами httpd (/etc/httpd/conf) должны лежать два конфига, в нашем случае это будут first.conf и second.conf
+Для удачного запуска, в конфигурационных файлах должны быть указаны уникальные для каждого экземпляра опции Listen и PidFile. Конфиги можно скопировать и поправить только второй, в нем должны быть след. опции:
+```
+PidFile /var/run/httpd-second.pid
+Listen 8080
+```
+
+- Запускаем и проверяем
+```
+[root@test ~]# systemctl start httpd@first
+[root@test ~]# systemctl start httpd@second
+```
