@@ -341,3 +341,4 @@ Transaction Summary
 Install  3 Packages
 
 ```
+<img width="866" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/a984798d-b708-405c-8273-e785a670ab21">
