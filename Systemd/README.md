@@ -250,4 +250,7 @@ Listen 8080
 ```
 [root@test ~]# systemctl start httpd@first
 [root@test ~]# systemctl start httpd@second
+[root@test ~]# ss -tnulp | grep httpd
+tcp   LISTEN 0      128                *:80              *:*    users:(("httpd",pid=55102,fd=4))                                                                           
+tcp   LISTEN 0      128                *:8080            *:*    users:(("httpd",pid=54470,fd=4),("httpd",pid=54469,fd=4),("httpd",pid=54468,fd=4),("httpd",pid=54463,fd=4))
 ```
