@@ -82,7 +82,7 @@ mount -o remount,rw /
 - Монтируем sysroot и меняем пароль
 <img width="511" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/e8d114fb-270c-467e-a8e6-5854a2196291">
 
-##Установить систему с LVM, после чего переименовать VG
+## Установить систему с LVM, после чего переименовать VG
 
 - Проверим текущее состояние системы
 ```
@@ -125,6 +125,7 @@ nvme0n1                 259:0    0    20G  0 disk
 ├─nvme0n1p2             259:2    0   1.8G  0 part /boot
 └─nvme0n1p3             259:3    0  17.3G  0 part 
   └─OtusRoot-ubuntu--lv 253:0    0    10G  0 lvm  /
+
 root@GRUB:~# df -h
 Filesystem                       Size  Used Avail Use% Mounted on
 tmpfs                             97M  1.3M   95M   2% /run
@@ -135,3 +136,37 @@ tmpfs                            5.0M     0  5.0M   0% /run/lock
 /dev/nvme0n1p1                   952M  6.4M  945M   1% /boot/efi
 tmpfs                             97M  4.0K   97M   1% /run/user/1000
 ```
+
+## Добавить модуль в initrd
+
+- Создаем там папку с именем 01test
+```
+root@GRUB:~# mkdir /usr/lib/dracut/modules.d/01test
+```
+
+В нее поместим два скрипта:
+
+1. module-setup.sh - который устанавливает модуль и вызывает скрипт test.sh
+2. test.sh - собственно сам вызываемый скрипт, в нём у нас рисуется пингвинчик
+
+- Пересобираем образ initrd
+```
+mkinitrd -f -v /boot/initramfs-$(uname -r).img $(uname -r)
+dracut: -rwxr-xr-x   1 root     root        34976 Apr  9 15:32 usr/sbin/sulogin
+dracut: -rwxr-xr-x   1 root     root        18592 Apr  9 15:32 usr/sbin/swapoff
+dracut: drwxr-xr-x   3 root     root            0 Apr 13 09:00 var
+dracut: lrwxrwxrwx   1 root     root           11 Apr 13 09:00 var/lock -> ../run/lock
+dracut: lrwxrwxrwx   1 root     root            6 Apr 13 09:00 var/run -> ../run
+dracut: drwxr-xr-x   2 root     root            0 Apr 13 09:00 var/tmp
+dracut: ========================================================================
+dracut: *** Creating initramfs image file '/boot/initramfs-5.15.0-102-generic.img' done ***
+```
+
+- Проверим, какие модули загружены в образ:
+root@GRUB:/usr/lib/dracut/modules.d/01test# lsinitrd -m /boot/initramfs-$(uname -r).img | grep test
+test
+
+- Перезагружаемся и в итоге при загрузке будет пауза на 10 секунд и вы увидите пингвина в выводе
+терминала
+
+
