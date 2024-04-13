@@ -143,3 +143,91 @@ Installed:
 
 Complete!
 ```
+
+- Поправить сам nginx.spec файл, чтобы NGINX собирался с необходимыми нам опциями:
+```
+[root@test ~]# vi /root/rpmbuild/SPECS/nginx.spec 
+---
+%build
+./configure %{BASE_CONFIGURE_ARGS} \
+    --with-cc-opt="%{WITH_CC_OPT}" \
+    --with-ld-opt="%{WITH_LD_OPT}" \
+    --with-debug \
+    --with-openssl=/root/openssl-OpenSSL_1_1_1-stable
+make %{?_smp_mflags}
+%{__mv} %{bdir}/objs/nginx \
+    %{bdir}/objs/nginx-debug
+./configure %{BASE_CONFIGURE_ARGS} \
+    --with-cc-opt="%{WITH_CC_OPT}" \
+    --with-ld-opt="%{WITH_LD_OPT}"
+make %{?_smp_mflags}
+```
+
+- Приступаем к сборке RPM пакета:
+```
+[root@test ~]# rpmbuild -bb rpmbuild/SPECS/nginx.spec
+---
+Executing(%check): /bin/sh -e /var/tmp/rpm-tmp.bNjG46
++ umask 022
++ cd /root/rpmbuild/BUILD
++ cd nginx-1.20.2
++ /usr/bin/rm -rf /root/rpmbuild/BUILDROOT/nginx-1.20.2-1.el8.ngx.x86_64/usr/src
++ cd /root/rpmbuild/BUILD/nginx-1.20.2
++ grep -v usr/src debugfiles.list
++ mv debugfiles.list.new debugfiles.list
++ cat /dev/null
++ exit 0
+Processing files: nginx-1.20.2-1.el8.ngx.x86_64
+Provides: config(nginx) = 1:1.20.2-1.el8.ngx nginx = 1:1.20.2-1.el8.ngx nginx(x86-64) = 1:1.20.2-1.el8.ngx nginx-r1.20.2 webserver
+```
+
+- Убедимся, в создании пакета:
+```
+[root@test ~]# ll rpmbuild/RPMS/x86_64/
+total 4676
+-rw-r--r--. 1 root root 2250096 Apr 13 12:35 nginx-1.20.2-1.el8.ngx.x86_64.rpm
+-rw-r--r--. 1 root root 2533120 Apr 13 12:36 nginx-debuginfo-1.20.2-1.el8.ngx.x86_64.rpm
+```
+
+- Установим наш пакет и проверим, что nginx работает
+```
+[root@test ~]# yum localinstall -y /root/rpmbuild/RPMS/x86_64/nginx-1.20.2-1.el8.ngx.x86_64.rpm
+Last metadata expiration check: 0:21:40 ago on Sat 13 Apr 2024 12:27:48 PM UTC.
+Dependencies resolved.
+================================================================================================================================================================================
+ Package                              Architecture                          Version                                           Repository                                   Size
+================================================================================================================================================================================
+Installing:
+ nginx                                x86_64                                1:1.20.2-1.el8.ngx                                @commandline                                2.1 M
+
+Transaction Summary
+================================================================================================================================================================================
+Install  1 Package
+
+----------------------------------------------------------------------
+
+  Verifying        : nginx-1:1.20.2-1.el8.ngx.x86_64                                                                                                                        1/1 
+
+Installed:
+  nginx-1:1.20.2-1.el8.ngx.x86_64                                                                                                                                               
+
+Complete!
+[root@test ~]# systemctl start nginx
+[root@test ~]# systemctl status nginx
+● nginx.service - nginx - high performance web server
+   Loaded: loaded (/usr/lib/systemd/system/nginx.service; disabled; vendor preset: disabled)
+   Active: active (running) since Sat 2024-04-13 12:49:42 UTC; 4s ago
+     Docs: http://nginx.org/en/docs/
+  Process: 52879 ExecStart=/usr/sbin/nginx -c /etc/nginx/nginx.conf (code=exited, status=0/SUCCESS)
+ Main PID: 52880 (nginx)
+    Tasks: 2 (limit: 12360)
+   Memory: 1.9M
+   CGroup: /system.slice/nginx.service
+           ├─52880 nginx: master process /usr/sbin/nginx -c /etc/nginx/nginx.conf
+           └─52881 nginx: worker process
+
+Apr 13 12:49:42 test.novalocal systemd[1]: Starting nginx - high performance web server...
+Apr 13 12:49:42 test.novalocal systemd[1]: Started nginx - high performance web server.
+```
+
+- 
