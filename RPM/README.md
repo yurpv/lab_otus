@@ -287,3 +287,57 @@ nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
 nginx: configuration file /etc/nginx/nginx.conf test is successful
 [root@test ~]# nginx -s reload
 ```
+
+- Теперь можно через curl посмотреть результат
+```
+[root@test ~]# curl -a http://localhost/repo/
+<html>
+<head><title>Index of /repo/</title></head>
+<body>
+<h1>Index of /repo/</h1><hr><pre><a href="../">../</a>
+<a href="repodata/">repodata/</a>                                          13-Apr-2024 12:52                   -
+<a href="nginx-1.20.2-1.el8.ngx.x86_64.rpm">nginx-1.20.2-1.el8.ngx.x86_64.rpm</a>                  13-Apr-2024 12:51             2250096
+<a href="percona-orchestrator-3.2.6-2.el8.x86_64.rpm">percona-orchestrator-3.2.6-2.el8.x86_64.rpm</a>        16-Feb-2022 15:57             5222976
+</pre><hr></body>
+</html>
+```
+
+- Добавим репозиторий в /etc/yum.repos.d
+```
+[root@test ~]# cat >> /etc/yum.repos.d/otus.repo << EOF
+> [otus]
+> name=otus-linux
+> baseurl=http://localhost/repo
+> gpgcheck=0
+> enabled=1
+> EOF
+```
+
+- Убедимся, что репозиторий подключился и посмотрим, что в нем есть
+```
+[root@test ~]#  yum repolist enabled | grep otus
+otus                            otus-linux
+[root@test ~]#  yum list | grep otus
+otus-linux                                      197 kB/s | 2.8 kB     00:00    
+percona-orchestrator.x86_64                            2:3.2.6-2.el8                                          otus         
+```
+
+- Установим репозиторий percona-release
+```
+[root@test ~]# yum install percona-orchestrator.x86_64 -y
+Last metadata expiration check: 0:00:25 ago on Sat 13 Apr 2024 12:55:22 PM UTC.
+Dependencies resolved.
+================================================================================================================================================================================
+ Package                                           Architecture                        Version                                     Repository                              Size
+================================================================================================================================================================================
+Installing:
+ percona-orchestrator                              x86_64                              2:3.2.6-2.el8                               otus                                   5.0 M
+Installing dependencies:
+ jq                                                x86_64                              1.5-12.el8                                  appstream                              161 k
+ oniguruma                                         x86_64                              6.8.2-2.el8                                 appstream                              187 k
+
+Transaction Summary
+================================================================================================================================================================================
+Install  3 Packages
+
+```
