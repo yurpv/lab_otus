@@ -230,4 +230,60 @@ Apr 13 12:49:42 test.novalocal systemd[1]: Starting nginx - high performance web
 Apr 13 12:49:42 test.novalocal systemd[1]: Started nginx - high performance web server.
 ```
 
-- 
+## Создать свой репозиторий и разместить там ранее собранный RPM
+
+- Директория для статики у NGINX по умолчанию /usr/share/nginx/html. Создадим там каталог repo
+```
+[root@test ~]# mkdir /usr/share/nginx/html/repo
+``` 
+
+- Скопируем туда наш собранный RPM и RPM для установки репозитория Percona-Server:
+```
+cp ./rpmbuild/RPMS/x86_64/nginx-1.20.2-1.el8.ngx.x86_64.rpm /usr/share/nginx/html/repo/
+
+[root@test ~]# wget https://downloads.percona.com/downloads/percona-distribution-mysql-ps/percona-distribution-mysql-ps-8.0.28/binary/redhat/8/x86_64/percona-orchestrator-3.2.6-2.el8.x86_64.rpm -O /usr/share/nginx/html/repo/percona-orchestrator-3.2.6-2.el8.x86_64.rpm
+--2024-04-13 12:52:13--  https://downloads.percona.com/downloads/percona-distribution-mysql-ps/percona-distribution-mysql-ps-8.0.28/binary/redhat/8/x86_64/percona-orchestrator-3.2.6-2.el8.x86_64.rpm
+Resolving downloads.percona.com (downloads.percona.com)... 49.12.125.205, 2a01:4f8:242:5792::2
+Connecting to downloads.percona.com (downloads.percona.com)|49.12.125.205|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 5222976 (5.0M) [application/x-redhat-package-manager]
+Saving to: ‘/usr/share/nginx/html/repo/percona-orchestrator-3.2.6-2.el8.x86_64.rpm’
+
+/usr/share/nginx/html/repo/percona-orchestr 100%[===========================================================================================>]   4.98M  14.4MB/s    in 0.3s    
+
+2024-04-13 12:52:19 (14.4 MB/s) - ‘/usr/share/nginx/html/repo/percona-orchestrator-3.2.6-2.el8.x86_64.rpm’ saved [5222976/5222976]
+```
+
+- Инициализируем репозиторий
+```
+[root@test ~]# createrepo /usr/share/nginx/html/repo/
+Directory walk started
+Directory walk done - 2 packages
+Temporary output repo path: /usr/share/nginx/html/repo/.repodata/
+Preparing sqlite DBs
+Pool started (with 5 workers)
+Pool finished
+```
+
+- настроим в NGINX доступ к листингу каталога. В location / в файле /etc/nginx/conf.d/default.conf добавим директиву autoindex on.
+```
+server {
+    listen       80;
+    server_name  localhost;
+
+    #access_log  /var/log/nginx/host.access.log  main;
+
+    location / {
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+        autoindex on;
+    }
+```
+
+- Проверяем синтаксис и перезапускаем NGINX
+```
+[root@test ~]# nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+[root@test ~]# nginx -s reload
+```
