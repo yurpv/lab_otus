@@ -1,9 +1,13 @@
-#Автоматизация администрирования. Ansible
-Для лабораторных работ использую Mac OS (m1), система виртуализации vmware Fusion, тестовая vm Debian 12 ARM, Vagrantfile и все остальные конфигурационные файл добавлен в репозитроий lab_otus/Ansible
-- Поднял хост с помощью Vagrantfile и проверил доступ по ssh
-#vagrant up
-- C помощью команды vagrant ssh-config посмотрел необходимые параметры
+**Автоматизация администрирования. Ansible**
+# Для лабораторных работ использую Mac OS (m1), система виртуализации vmware Fusion, тестовая vm Debian 12 ARM, Vagrantfile и все остальные конфигурационные файл добавлен в репозитроий lab_otus/Ansible
 
+- Поднял хост с помощью Vagrantfile и проверил доступ по ssh
+```
+#vagrant up
+```
+
+- C помощью команды vagrant ssh-config посмотрел необходимые параметры
+```
 vagrant ssh-config
 Host nginx
   HostName 127.0.0.1
@@ -17,9 +21,11 @@ Host nginx
   LogLevel FATAL
   PubkeyAcceptedKeyTypes +ssh-rsa
   HostKeyAlgorithms +ssh-rsa
+```
 
 - Создал inventory файл ./staging/hosts ./ansible.cfg со следующим содержимым
-  cat ./staging/hosts 
+```
+cat ./staging/hosts 
 nginx ansible_host=127.0.0.1 ansible_port=2222 ansible_private_key_file=.vagrant/machines/nginx/vmware_desktop/private_key
 и
 cat ./ansible.cfg
@@ -28,8 +34,10 @@ inventory = ./staging/hosts
 remote_user = vagrant
 host_key_checking = False
 retry_files_enabled = False
+```
 
 - Проверяем, что можем управлять хостом
+```
 ansible nginx -m ping      
 nginx | SUCCESS => {
     "ansible_facts": {
@@ -38,13 +46,17 @@ nginx | SUCCESS => {
     "changed": false,
     "ping": "pong"
 }
+```
 
 - Смотрим какое ядро установлено на хосте
+```
 ansible nginx -m command -a "uname -r"
 nginx | CHANGED | rc=0 >>
 6.1.0-18-arm64
+```
 
 - Проверим статус сервиса firewalld
+```
 ansible nginx -m systemd -a name=firewalld
 nginx | SUCCESS => {
     "ansible_facts": {
@@ -56,8 +68,10 @@ nginx | SUCCESS => {
         "ActiveEnterTimestampMonotonic": "0",
         "ActiveExitTimestampMonotonic": "0",
         "ActiveState": "inactive",
+```
 
 - Запускаем созданный нами файл nginx.yml
+```
 ansible-playbook nginx.yml
 
 PLAY [NGINX | Install and configure NGINX] *************************************************************************************************************************************
@@ -76,8 +90,10 @@ ok: [nginx]
 
 PLAY RECAP *********************************************************************************************************************************************************************
 nginx                      : ok=4    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+```
 
 - Проверяем проверяем как прошла установка
+```
 curl http://192.168.227.136:8080
 <!DOCTYPE html>
 <html>
@@ -102,3 +118,4 @@ Commercial support is available at
 <p><em>Thank you for using nginx.</em></p>
 </body>
 </html>
+```
