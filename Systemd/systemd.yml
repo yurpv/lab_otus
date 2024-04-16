@@ -1,0 +1,94 @@
+---
+- name: Systemd | configure Systemd
+  hosts: Systemd
+  become: yes
+  become_user: root
+  gather_facts: false
+
+  tasks:
+    - name: update
+      dnf:
+        update_cache: yes
+
+    - name: Copy multiple files in Ansible with different permissions
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - { src: 'templates/watchlog', dest: '/etc/sysconfig/watchlog'}
+        - { src: 'templates/watchlog.sh', dest: '/opt/watchlog.sh'}
+        - { src: 'templates/watchlog.log', dest: '/var/log/watchlog.log'}
+        - { src: 'templates/watchlog.timer', dest: '/etc/systemd/system/watchlog.timer'}
+        - { src: 'templates/watchlog.service', dest: '/etc/systemd/system/watchlog.service'}
+        - { src: 'templates/spawn-fcgi.service', dest: '/etc/systemd/system/spawn-fcgi.service'}
+        - { src: 'templates/httpd.service', dest: '/usr/lib/systemd/system/httpd.service'}
+        - { src: 'templates/httpd.conf', dest: '/etc/httpd/conf/first.conf'}
+        - { src: 'templates/httpd.conf', dest: '/etc/httpd/conf/second.conf'}
+
+
+    - name: insert string in file
+      lineinfile:
+        dest: "/etc/httpd/conf/second.conf"
+        insertafter: "^ServerRoot"
+        line: "PidFile /var/run/httpd-second.pid"
+
+    - name: Ansible replace text in *.conf files
+      replace:
+        path: "/etc/httpd/conf/second.conf"
+        regexp: "Listen 80"
+        replace: "Listen 8080"
+
+#    - name: replace in first.conf and second.conf files
+  #    shell: sed 's/Listen 80/Listen 8080/g; s/#OPTIONS=/OPTIONS=/g' /etc/sysconfig/spawn-fcgi
+
+    - name: Changing perm of watchlog.sh
+      file:
+        path: "/opt/watchlog.sh"
+        mode: 0755
+        state: absent
+
+    - name: start watchlog.timer
+      systemd:
+        name: watchlog.timer
+        state: started
+
+    - name: Show File Content
+      debug:
+        msg: "{{ lookup('file', '/etc/ntp.conf') }}"
+
+    - name: replace in spawn-fcgi files
+      shell: sed -i 's/#SOCKET/SOCKET=/g; s/#OPTIONS=/OPTIONS=/g' /etc/sysconfig/spawn-fcgi
+
+    - name: Creating a httpd-first file with content
+      copy:
+        dest: "/etc/sysconfig/httpd-first"
+        content: |
+          OPTIONS=-f conf/first.conf
+
+    - name: Creating a httpd-second file with content
+      copy:
+        dest: "/etc/sysconfig/httpd-second"
+        content: |
+          OPTIONS=-f conf/second.conf
+
+    - name: start watchlog.timer
+      systemd:
+        name: watchlog.timer
+        state: started
+
+    - name: status watchlog.timer
+      shell: systemctl status watchlog.timer
+
+    - name: start httpd@first
+      shell: systemctl start httpd@first
+
+    - name: start httpd@second
+      shell: systemctl start httpd@second
+
+    - name: netstat
+      shell: /bin/netstat -tunlp |  grep ":{{ item }} " | sed -e 's/.*\///'
+      register: netstat_result
+      with_items:
+        - 80
+        - 8080
+      changed_when: false
