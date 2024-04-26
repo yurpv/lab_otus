@@ -1,0 +1,36 @@
+---
+- name: Bash | configure Bash
+  hosts: Bash
+  become: yes
+  become_user: root
+  gather_facts: false
+
+  tasks:
+    - name: update
+      apt:
+        update_cache: yes
+    - name: Install the package "mailutils"
+      apt:
+        name: mailutils
+
+    - name: create folder
+      shell: mkdir /home/vagrant/scripts
+
+    - name: Copy files in Ansible with different permissions
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - { src: 'templates/script.sh', dest: '/home/vagrant/scripts/script.sh'}
+        - { src: 'templates/access.log', dest: '/home/vagrant/scripts/access.log'}
+
+    - name: replace in spawn-fcgi files
+      shell: |
+        chmod +x /home/vagrant/scripts/script.sh
+        chown -R vagrant:vagrant /home/vagrant/scripts/
+
+    - name: Run script the Cron Job
+      cron:
+        name: "Run script"
+        job: "/home/vagrant/scripts/script.sh"
+        hour: "*/30"
