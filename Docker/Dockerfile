@@ -6,7 +6,9 @@ RUN apk add --update --no-cache nginx \
 && mkdir -p /var/www/html \
 && mkdir -p /run/nginx \
 && chown -R www-data:www-data /var/lib/nginx \
-&& chown -R www-data:www-data /var/www/html \ 
+&& chown -R www-data:www-data /var/www/html \
+ADD https://raw.githubusercontent.com/yurpv/lab_otus/main/Docker/nginx.conf /etc/nginx/
+ADD https://raw.githubusercontent.com/yurpv/lab_otus/main/Docker/index.html /www/html/
 
 EXPOSE 80
 STOPSIGNAL SIGTERM
