@@ -1,0 +1,2 @@
+ns01 ansible_host=192.168.50.10 ansible_port=22 ansible_private_key_file=.vagrant/machines/ns01/vmware_desktop/private_key
+client ansible_host=192.168.50.15 ansible_port=22 ansible_private_key_file=.vagrant/machines/client/vmware_desktop/private_key
