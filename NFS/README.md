@@ -120,32 +120,48 @@ The following additional packages will be installed:
 ...
 ```
 
-Добавляем в /etc/fstab строку 
-root@nfsc:~# echo "192.168.50.10:/srv/share/ /mnt nfs vers=3,noauto,x-systemd.automount 0 0" >> /etc/fstab
-
-и выполняем команды:
+Добавляем в /etc/fstab строку и выполняем команды:
+```
+echo "192.168.65.10:/srv/share/ /mnt nfs vers=3,noauto,x-systemd.automount 0 0" >> /etc/fstab
 root@nfsc:~# systemctl daemon-reload 
-root@nfsc:~# systemctl restart remote-fs.target 
+root@nfsc:~# systemctl restart remote-fs.target
+```
 
-Отметим, что в данном случае происходит автоматическая генерация systemd units в каталоге /run/systemd/generator/, которые производят монтирование при первом обращении к каталогу /mnt/.
+Отметим, что в данном случае происходит автоматическая генерация systemd units в каталоге /run/systemd/generator/, которые производят монтирование при первом обращении к каталогу /mnt/. </br>
 Заходим в директорию /mnt/ и проверяем успешность монтирования:
-root@nfsc:~# mount | grep mnt 
+```
+root@nfsc:/home/vagrant# mount | grep mnt
+vmhgfs-fuse on /mnt/vagrant-mounts/1000-1000 type fuse.vmhgfs-fuse (rw,nosuid,nodev,relatime,user_id=0,group_id=0,default_permissions,allow_other)
+systemd-1 on /mnt type autofs (rw,relatime,fd=68,pgrp=1,timeout=0,minproto=5,maxproto=5,direct,pipe_ino=19000)
+```
 
-При успехе вывод должен примерно соответствовать этому:
-[root@nfsc mnt]# mount | grep mnt 
-systemd-1 on /mnt type autofs (rw,relatime,fd=46,pgrp=1,timeout=0,minproto=5,maxproto=5,direct,pipe_ino=46033)
-192.168.50.10:/srv/share/ on /mnt type nfs (rw,relatime,vers=3,rsize=131072,wsize=131072,namlen=255,hard,proto=tcp,timeo=600,retrans=2,sec=sys,mountaddr=192.168.50.10,mountvers=3,mountport=50749,mountproto=udp,local_lock=none,addr=192.168.50.10)
+### Проверка работоспособности 
 
-Обратите внимание на `vers=3`, что соответствует NFSv3, как того требует задание.
-Проверка работоспособности 
-Заходим на сервер. 
-Заходим в каталог /srv/share/upload.
-Создаём тестовый файл touch check_file.
+Заходим на сервер. </br>
+Заходим в каталог /srv/share/upload.</br>
+Создаём тестовый файл touch check_file.</br>
+```
+root@nfss:/home/vagrant# cd /srv/share/upload
+root@nfss:/srv/share/upload# touch check_file
+root@nfss:/srv/share/upload# ls
+check_file
+```
 Заходим на клиент.
 Заходим в каталог /mnt/upload. 
 Проверяем наличие ранее созданного файла.
+```
+root@nfsc:/home/vagrant# cd /mnt/upload
+root@nfsc:/mnt/upload# ls
+check_file
+```
+
 Создаём тестовый файл touch client_file. 
 Проверяем, что файл успешно создан.
+```
+root@nfsc:/mnt/upload# touch client_file
+root@nfsc:/mnt/upload# ls
+client_file
+```
 
 Если вышеуказанные проверки прошли успешно, это значит, что проблем с правами нет. 
 
@@ -154,6 +170,27 @@ systemd-1 on /mnt type autofs (rw,relatime,fd=46,pgrp=1,timeout=0,minproto=5,max
 заходим на клиент;
 заходим в каталог /mnt/upload;
 проверяем наличие ранее созданных файлов.
+```
+root@nfsc:/mnt/upload# reboot 
+
+Broadcast message from root@vagrant on pts/1 (Wed 2024-05-29 08:56:44 UTC):
+
+The system will reboot now!
+
+NFS % vagrant ssh nfsc
+Welcome to Ubuntu 24.04 LTS (GNU/Linux 6.8.0-31-generic aarch64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Wed May 29 11:45:12 AM UTC 2024
+...
+Last login: Wed May 29 08:46:33 2024 from 192.168.65.1
+vagrant@nfsc:~$ cd /mnt/upload
+vagrant@nfsc:/mnt/upload$ ls
+check_file  client_file
+```
 
 Проверяем сервер: 
 заходим на сервер в отдельном окне терминала;
@@ -161,3 +198,34 @@ systemd-1 on /mnt type autofs (rw,relatime,fd=46,pgrp=1,timeout=0,minproto=5,max
 заходим на сервер;
 проверяем наличие файлов в каталоге /srv/share/upload/;
 проверяем экспорты exportfs -s;
+```
+root@nfss:/srv/share/upload# reboot 
+
+Broadcast message from root@vagrant on pts/1 (Wed 2024-05-29 08:57:34 UTC):
+
+The system will reboot now!
+
+root@nfss:/srv/share/upload# Connection to 192.168.65.202 closed by remote host.
+ypushkarev@MacBook-Air-Yurii NFS % vagrant ssh nfss
+Welcome to Ubuntu 24.04 LTS (GNU/Linux 6.8.0-31-generic aarch64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Wed May 29 11:44:39 AM UTC 2024
+
+  System load:  0.0                Processes:             246
+  Usage of /:   10.7% of 29.82GB   Users logged in:       0
+  Memory usage: 20%                IPv4 address for eth0: 192.168.65.202
+  Swap usage:   0%
+
+Last login: Wed May 29 08:46:14 2024 from 192.168.65.1
+vagrant@nfss:~$ cd /srv/share/upload/
+vagrant@nfss:/srv/share/upload$ ls
+check_file  client_file
+vagrant@nfss:/srv/share/upload$ exportfs -s
+exportfs: could not open /var/lib/nfs/.etab.lock for locking: errno 13 (Permission denied)
+vagrant@nfss:/srv/share/upload$ sudo exportfs -s
+/srv/share  192.168.65.11/32(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)
+```
