@@ -1,83 +1,124 @@
-Стенд Vagrant с NFS 
-Цель домашнего задания
-Научиться самостоятельно разворачивать сервис NFS и подключать к нему клиентов.
-Описание домашнего задания 
-Основная часть: 
-vagrant up должен поднимать 2 настроенных виртуальных машины (сервер NFS и клиента) без дополнительных ручных действий;
-на сервере NFS должна быть подготовлена и экспортирована директория; 
-в экспортированной директории должна быть поддиректория с именем upload с правами на запись в неё; 
-экспортированная директория должна автоматически монтироваться на клиенте при старте виртуальной машины (systemd, autofs или fstab — любым способом);
-монтирование и работа NFS на клиенте должна быть организована с использованием NFSv3.
-Для самостоятельной реализации: 
-настроить аутентификацию через KERBEROS с использованием NFSv4.
-Инструкция по выполнению домашнего задания
-Требуется предварительно установленный и работоспособный Hashicorp Vagrant и Oracle VirtualBox.
-Все дальнейшие действия были проверены при использовании Ubuntu 24.04 в качестве хостовой ОС, Vagrant 2.4.1, VirtualBox v7.0.18  и образа Ubuntu 22.04 v20240426.0.0 из Vagrant Cloud. Серьёзные отступления от этой конфигурации могут потребовать адаптации с вашей стороны.
-Создаём тестовые виртуальные машины 
-Для начала, предлагается использовать этот шаблон для создания виртуальных машин (код также доступен в репозитории): 
-Vagrant.configure(2) do |config|
- config.vm.box = "ubuntu/jammy64"
- config.vm.provider "virtualbox" do |v|
-   v.memory = 1024
-   v.cpus = 1
- end
+# Стенд Vagrant с NFS 
 
+### Для лабораторных работ использую Mac OS (m1), система виртуализации vmware Fusion, так при выполнении лабораторной работы необходим vagrantbox bento/ubuntu-24.04 v202404.26.0 
 
- config.vm.define "nfss" do |nfss|
-   nfss.vm.network "private_network", ip: "192.168.50.10", virtualbox__intnet: "net1"
-   nfss.vm.hostname = "nfss"
- end
-
-
- config.vm.define "nfsc" do |nfsc|
-   nfsc.vm.network "private_network", ip: "192.168.50.11", virtualbox__intnet: "net1"
-   nfsc.vm.hostname = "nfsc"
- end
-
-
-end
+### Цель домашнего задания
+### Научиться самостоятельно разворачивать сервис NFS и подключать к нему клиентов.
+### Описание домашнего задания 
+ - Основная часть: </br>
+Запускаем тестовые vm, из созданого Vagrantfile:
+```
+ vagrant up                                  
+Bringing machine 'nfss' up with 'vmware_desktop' provider...
+Bringing machine 'nfsc' up with 'vmware_desktop' provider...
+```
 
 Результатом выполнения команды `vagrant up` станут 2 виртуальных машины: nfss для сервера NFS и nfsc для клиента. 
-Настраиваем сервер NFS 
-Заходим на сервер:
+
+Настраиваем сервер NFS, заходим на сервер:
+```
 vagrant ssh nfss
+```
 
-Дальнейшие действия выполняются от имени пользователя имеющего повышенные привилегии, разрешающие описанные действия. 
+Дальнейшие действия выполняются от имени пользователя имеющего повышенные привилегии, разрешающие описанные действия. </br>
 Установим сервер NFS:
-root@nfss:/etc# apt install nfs-kernel-server
+```
+root@nfss:/home/vagrant# apt install nfs-kernel-server
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following additional packages will be installed:
+  keyutils libnfsidmap1 nfs-common rpcbind
+...
+```
 
-Настройки сервера находятся в файле /etc/nfs.conf 
-
-Проверяем наличие слушающих портов 2049/udp, 2049/tcp,111/udp, 111/tcp (не все они будут использоваться далее,  но их наличие сигнализирует о том, что необходимые сервисы готовы принимать внешние подключения):
+Проверяем наличие слушающих портов 2049,111 tcp/udp 
 root@nfss:/etc# ss -tnplu 
+```
+vagrant# ss -tnplu
+Netid      State       Recv-Q      Send-Q                 Local Address:Port            Peer Address:Port      Process                                                          
+udp        UNCONN      0           0                            0.0.0.0:53202                0.0.0.0:*                                                                          
+udp        UNCONN      0           0                            0.0.0.0:42988                0.0.0.0:*          users:(("rpc.mountd",pid=3162,fd=4))                            
+udp        UNCONN      0           0                         127.0.0.54:53                   0.0.0.0:*          users:(("systemd-resolve",pid=658,fd=16))                       
+udp        UNCONN      0           0                      127.0.0.53%lo:53                   0.0.0.0:*          users:(("systemd-resolve",pid=658,fd=14))                       
+udp        UNCONN      0           0                192.168.65.202%eth0:68                   0.0.0.0:*          users:(("systemd-network",pid=1765,fd=24))                      
+udp        UNCONN      0           0                            0.0.0.0:49246                0.0.0.0:*          users:(("rpc.mountd",pid=3162,fd=8))                            
+udp        UNCONN      0           0                            0.0.0.0:111                  0.0.0.0:*          users:(("rpcbind",pid=2644,fd=5),("systemd",pid=1,fd=152))      
+udp        UNCONN      0           0                          127.0.0.1:784                  0.0.0.0:*          users:(("rpc.statd",pid=3152,fd=5))                             
+udp        UNCONN      0           0                            0.0.0.0:37706                0.0.0.0:*          users:(("rpc.mountd",pid=3162,fd=12))                           
+udp        UNCONN      0           0                            0.0.0.0:38262                0.0.0.0:*          users:(("rpc.statd",pid=3152,fd=8))                             
+udp        UNCONN      0           0                               [::]:111                     [::]:*          users:(("rpcbind",pid=2644,fd=7),("systemd",pid=1,fd=154))      
+udp        UNCONN      0           0                               [::]:52880                   [::]:*          users:(("rpc.statd",pid=3152,fd=10))                            
+udp        UNCONN      0           0                               [::]:39058                   [::]:*          users:(("rpc.mountd",pid=3162,fd=14))                           
+udp        UNCONN      0           0                               [::]:59586                   [::]:*          users:(("rpc.mountd",pid=3162,fd=6))                            
+udp        UNCONN      0           0                               [::]:41274                   [::]:*                                                                          
+udp        UNCONN      0           0                               [::]:48048                   [::]:*          users:(("rpc.mountd",pid=3162,fd=10))                           
+tcp        LISTEN      0           4096                         0.0.0.0:44341                0.0.0.0:*          users:(("rpc.mountd",pid=3162,fd=13))                           
+tcp        LISTEN      0           4096                         0.0.0.0:53613                0.0.0.0:*          users:(("rpc.statd",pid=3152,fd=9))                             
+tcp        LISTEN      0           4096                      127.0.0.54:53                   0.0.0.0:*          users:(("systemd-resolve",pid=658,fd=17))                       
+tcp        LISTEN      0           4096                         0.0.0.0:40435                0.0.0.0:*          users:(("rpc.mountd",pid=3162,fd=9))                            
+tcp        LISTEN      0           4096                   127.0.0.53%lo:53                   0.0.0.0:*          users:(("systemd-resolve",pid=658,fd=15))                       
+tcp        LISTEN      0           64                           0.0.0.0:2049                 0.0.0.0:*                                                                          
+tcp        LISTEN      0           4096                         0.0.0.0:111                  0.0.0.0:*          users:(("rpcbind",pid=2644,fd=4),("systemd",pid=1,fd=151))      
+tcp        LISTEN      0           4096                         0.0.0.0:44735                0.0.0.0:*          users:(("rpc.mountd",pid=3162,fd=5))                            
+tcp        LISTEN      0           64                           0.0.0.0:42171                0.0.0.0:*                                                                          
+tcp        LISTEN      0           64                              [::]:46355                   [::]:*                                                                          
+tcp        LISTEN      0           4096                            [::]:56137                   [::]:*          users:(("rpc.mountd",pid=3162,fd=7))                            
+tcp        LISTEN      0           4096                            [::]:54593                   [::]:*          users:(("rpc.mountd",pid=3162,fd=15))                           
+tcp        LISTEN      0           64                              [::]:2049                    [::]:*                                                                          
+tcp        LISTEN      0           4096                               *:22                         *:*          users:(("sshd",pid=1270,fd=3),("systemd",pid=1,fd=233))         
+tcp        LISTEN      0           4096                            [::]:111                     [::]:*          users:(("rpcbind",pid=2644,fd=6),("systemd",pid=1,fd=153))      
+tcp        LISTEN      0           4096                            [::]:38579                   [::]:*          users:(("rpc.statd",pid=3152,fd=11))                            
+tcp        LISTEN      0           4096                            [::]:46793                   [::]:*          users:(("rpc.mountd",pid=3162,fd=11))  
+```
 
 Создаём и настраиваем директорию, которая будет экспортирована в будущем 
-root@nfss:/etc# mkdir -p /srv/share/upload 
-root@nfss:/etc# chown -R nobody:nogroup /srv/share 
-root@nfss:/etc# chmod 0777 /srv/share/upload 
+```
+root@nfss:/home/vagrant# mkdir -p /srv/share/upload
+root@nfss:/home/vagrant# chown -R nobody:nogroup /srv/share
+root@nfss:/home/vagrant# chmod 0777 /srv/share/upload
+```
 
 Cоздаём в файле /etc/exports структуру, которая позволит экспортировать ранее созданную директорию:
-root@nfss:/etc# cat << EOF > /etc/exports 
-/srv/share 192.168.50.11/32(rw,sync,root_squash)
+```
+root@nfss:/home/vagrant# cat << EOF > /etc/exports 
+/srv/share 192.168.65.11/32(rw,sync,root_squash)
 EOF
+```
 
 Экспортируем ранее созданную директорию:
-root@nfss:/etc# exportfs -r 
+```
+root@nfss:/home/vagrant# exportfs -r
+exportfs: /etc/exports [1]: Neither 'subtree_check' or 'no_subtree_check' specified for export "192.168.65.11/32:/srv/share".
+  Assuming default behaviour ('no_subtree_check').
+  NOTE: this default has changed since nfs-utils version 1.0.x
+```
 
 Проверяем экспортированную директорию следующей командой
-root@nfss:/etc# exportfs -s 
+```
+root@nfss:/home/vagrant# exportfs -s
+/srv/share  192.168.65.11/32(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)
+```
 
-Вывод должен быть аналогичен этому: 
-
-root@nfss:/etc# exportfs -s 
-/srv/share  192.168.50.11/32(sync,wdelay,hide,no_subtree_check,sec=sys,rw,secure,root_squash,no_all_squash)
-Настраиваем клиент NFS 
+- Настраиваем клиент NFS </br>
 Заходим на сервер 
-vagrant ssh nfsc 
+```
+NFS % vagrant ssh nfsc                            
+Welcome to Ubuntu 24.04 LTS (GNU/Linux 6.8.0-31-generic aarch64) 
+```
 
-Дальнейшие действия выполняются от имени пользователя имеющего повышенные привилегии, разрешающие описанные действия. 
+Дальнейшие действия выполняются от имени пользователя имеющего повышенные привилегии, разрешающие описанные действия. </br>
 Установим пакет с NFS-клиентом
-root@nfsc:~# sudo apt install nfs-common
+```
+vagrant@nfsc:~$ sudo -i
+root@nfsc:/home/vagrant# apt install nfs-common
+eading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+The following additional packages will be installed:
+  keyutils libnfsidmap1 rpcbind
+...
+```
 
 Добавляем в /etc/fstab строку 
 root@nfsc:~# echo "192.168.50.10:/srv/share/ /mnt nfs vers=3,noauto,x-systemd.automount 0 0" >> /etc/fstab
