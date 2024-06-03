@@ -286,4 +286,23 @@ Jun 03 09:59:13 grafana node_exporter[3135]: ts=2024-06-03T09:59:13.849Z caller=
 
 <img width="1209" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/79ce3130-ae50-4ce5-bfe9-921f0b43ae69">
 
+- Для настройки дашбодов необходимо подружить grafana и prometheus, заходим в datasource вводим url нашего сервера и нажимаем сохранить:
+<img width="1201" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/bbce5aed-30eb-44fb-851b-fe9911a6badc">
+<img width="1158" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/c2ceecc5-be27-4bf2-8bdc-a36282ad2913">
+<img width="1330" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/1688d7a9-6089-4897-991f-cf4a0fd3ca50">
+
+- Перейдем в раздел дашборд, тут мы сможешм создать свои даш или импортровать из сайта grafana, нажимаем new и import
+<img width="1358" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/6f4ccb59-5932-497b-a700-75795cef3dd2">
+<img width="701" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/ec553f41-e6a8-40ea-b42a-280caf4f0398">
+
+- Зайдем на сайт https://grafana.com/grafana/dashboards, ищем нужный дашборд, копируем его id и вставляем его при импорте:
+<img width="1360" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/9715fd7b-1c37-45fe-a216-329c2c7ad0ea">
+<img width="290" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/01ec9f5a-5b8c-4d53-b7a5-9fc3ca0a7b05">
+<img width="678" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/3c7b2941-d141-4cac-8a12-9155e78c7abe">
+<img width="759" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/263f0aad-7c13-4c6f-9841-0ccd3c6a38e5">
+
+- После загрузки дашборда, мы увидим увиидм метрики в графическом отображении
+- <img width="1513" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/db72ab8c-e226-4dcb-a4b1-64e2da392dc7">
+
+
 
