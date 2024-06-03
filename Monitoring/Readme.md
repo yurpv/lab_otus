@@ -305,4 +305,3 @@ Jun 03 09:59:13 grafana node_exporter[3135]: ts=2024-06-03T09:59:13.849Z caller=
 - <img width="1513" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/db72ab8c-e226-4dcb-a4b1-64e2da392dc7">
 
 
-
