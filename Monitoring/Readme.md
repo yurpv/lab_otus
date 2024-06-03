@@ -98,3 +98,116 @@ Jun 03 09:06:15 prometheus prometheus[2584]: ts=2024-06-03T09:06:15.170Z caller=
 
 - Теперь необходимо настроить Alertmanager, он необходим для группировки событий и отправки уведомлений об инцидентах
 
+- Скачаем Alertmanager и распакуем архив:
+
+```
+root@prometheus:/home/vagrant# wget https://github.com/prometheus/alertmanager/releases/download/v0.26.0/alertmanager-0.26.0.linux-arm64.tar.gz
+--2024-06-03 09:01:34--  https://github.com/prometheus/alertmanager/releases/download/v0.26.0/alertmanager-0.26.0.linux-arm64.tar.gz
+Resolving github.com (github.com)... 140.82.121.4
+Connecting to github.com (github.com)|140.82.121.4|:443... connected.
+...
+
+root@prometheus:/home/vagrant# tar xzf alertmanager-0.26.0.linux-arm64.tar.gz 
+```
+
+- Распределяем файлы по каталогам:
+```
+root@prometheus:/home/vagrant# mv alertmanager-0.26.0.linux-arm64 /etc/alertmanager
+root@prometheus:/home/vagrant# cd /etc/alertmanager
+root@prometheus:/etc/alertmanager# mv alertmanager amtool /usr/local/bin/
+root@prometheus:/etc/alertmanager# alertmanager --version
+alertmanager, version 0.26.0 (branch: HEAD, revision: d7b4f0c7322e7151d6e3b1e31cbc15361e295d8d)
+  build user:       root@520df6c16a84
+  build date:       20230824-11:09:02
+  go version:       go1.20.7
+  platform:         linux/arm64
+  tags:             netgo
+```
+
+- Создаем пользователя, от которого будем запускать систему мониторинга, даем права на папки и файлы, проверяем:
+```
+root@prometheus:/etc/alertmanager# groupadd alertmanager
+root@prometheus:/etc/alertmanager# useradd -s /sbin/nologin --system -g alertmanager alertmanager
+root@prometheus:/etc/prometheus# chown -R prometheus:prometheus /etc/prometheus
+root@prometheus:/etc/prometheus# chmod -R 775 /etc/alertmanager
+root@prometheus:/etc/prometheus# chown -R alertmanager:alertmanager /var/lib/prometheus/alertmanager
+root@prometheus:/etc/prometheus# systemctl start alertmanager
+root@prometheus:/etc/prometheus# systemctl status alertmanager
+● alertmanager.service - Alertmanager Service
+     Loaded: loaded (/etc/systemd/system/alertmanager.service; disabled; preset: enabled)
+     Active: active (running) since Mon 2024-06-03 09:16:59 UTC; 2s ago
+   Main PID: 2737 (alertmanager)
+      Tasks: 7 (limit: 4549)
+     Memory: 13.1M (peak: 13.4M)
+        CPU: 81ms
+     CGroup: /system.slice/alertmanager.service
+             └─2737 /usr/local/bin/alertmanager --config.file=/etc/alertmanager/alertmanager.yml --storage.path=/var/lib/prometheus/alertmanager --cluster.advertise-address=0.>
+
+Jun 03 09:16:59 prometheus systemd[1]: Started alertmanager.service - Alertmanager Service.
+Jun 03 09:16:59 prometheus (tmanager)[2737]: alertmanager.service: Referenced but unset environment variable evaluates to an empty string: ALERTMANAGER_OPTS
+Jun 03 09:16:59 prometheus alertmanager[2737]: ts=2024-06-03T09:16:59.175Z caller=main.go:245 level=info msg="Starting Alertmanager" version="(version=0.26.0, branch=HEAD, rev>
+Jun 03 09:16:59 prometheus alertmanager[2737]: ts=2024-06-03T09:16:59.175Z caller=main.go:246 level=info build_context="(go=go1.20.7, platform=linux/arm64, user=root@520df6c16>
+Jun 03 09:16:59 prometheus alertmanager[2737]: ts=2024-06-03T09:16:59.177Z caller=cluster.go:683 level=info component=cluster msg="Waiting for gossip to settle..." interval=2s
+Jun 03 09:16:59 prometheus alertmanager[2737]: ts=2024-06-03T09:16:59.210Z caller=coordinator.go:113 level=info component=configuration msg="Loading configuration file" file=/>
+Jun 03 09:16:59 prometheus alertmanager[2737]: ts=2024-06-03T09:16:59.211Z caller=coordinator.go:126 level=info component=configuration msg="Completed loading of configuration>
+Jun 03 09:16:59 prometheus alertmanager[2737]: ts=2024-06-03T09:16:59.218Z caller=tls_config.go:274 level=info msg="Listening on" address=[::]:9093
+Jun 03 09:16:59 prometheus alertmanager[2737]: ts=2024-06-03T09:16:59.218Z caller=tls_config.go:277 level=info msg="TLS is disabled." http2=false address=[::]:9093
+Jun 03 09:17:01 prometheus alertmanager[2737]: ts=2024-06-03T09:17:01.177Z caller=cluster.go:708 level=info component=cluster msg="gossip not settled" polls=0 before=0 now=1 e>
+lines 1-20/20 (END)
+```
+- Заходим через браузер на веб страницу нашего alertmanager:
+<img width="1072" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/d5e385c8-ffd8-4d22-8205-4aa7fe60dde8">
+
+- Для полужения метрик необходимо настроить установить node_exporter, делаем все тоже самое, что и до этого:
+```
+root@prometheus:/home/vagrant# wget https://github.com/prometheus/node_exporter/releases/download/v1.8.1/node_exporter-1.8.1.linux-arm64.tar.gz
+--2024-06-03 09:28:12--  https://github.com/prometheus/node_exporter/releases/download/v1.8.1/node_exporter-1.8.1.linux-arm64.tar.gz
+Resolving github.com (github.com)... 140.82.121.3
+Connecting to github.com (github.com)|140.82.121.3|:443... connected.
+root@prometheus:/home/vagrant# tar xzf node_exporter-1.8.1.linux-arm64.tar.gz 
+root@prometheus:/home/vagrant# cd node_exporter-1.8.1.linux-arm64
+root@prometheus:/home/vagrant/node_exporter-1.8.1.linux-arm64# mv node_exporter /usr/local/bin/
+root@prometheus:/home/vagrant/node_exporter-1.8.1.linux-arm64# cd ..
+root@prometheus:/home/vagrant# useradd --no-create-home --shell /bin/false node_exporter
+root@prometheus:/home/vagrant# chown -R node_exporter:node_exporter /usr/local/bin/node_exporter
+root@prometheus:/home/vagrant# systemctl start node_exporter
+root@prometheus:/home/vagrant# systemctl status node_exporter
+
+● node_exporter.service - Node Exporter
+     Loaded: loaded (/etc/systemd/system/node_exporter.service; disabled; preset: enabled)
+     Active: active (running) since Mon 2024-06-03 09:56:45 UTC; 2s ago
+   Main PID: 3035 (node_exporter)
+      Tasks: 5 (limit: 4549)
+     Memory: 2.6M (peak: 2.7M)
+        CPU: 14ms
+     CGroup: /system.slice/node_exporter.service
+             └─3035 /usr/local/bin/node_exporter
+```
+
+- Заходим через браузер на веб страницу нашего alertmanager:
+<img width="855" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/b887b166-c914-4870-90d4-4d683d6cc365">
+
+- Настроим отбражение метрик в prometheus:
+- Открываем конфигурационный файл prometheus:
+```
+vi /etc/prometheus/prometheus.yml
+```
+
+- Созданим новый job с определенными значениями:
+```
+#Node_exporter
+  - job_name: 'node_exporter'
+    scrape_interval: 5s
+    static_configs:
+      - targets:
+          - 192.168.65.208:9100
+          - 192.168.65.209:9100
+    relabel_configs:
+    - source_labels: [__address__]
+      regex: '.*'
+      target_label: instance
+```
+
+
+
+
