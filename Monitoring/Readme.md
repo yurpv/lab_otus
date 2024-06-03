@@ -208,6 +208,82 @@ vi /etc/prometheus/prometheus.yml
       target_label: instance
 ```
 
+- Перезапускаем prometheus и проверяем:
+<img width="870" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/aa4534ed-7689-443b-a270-c111f4f6191b">
 
+- Для красивого отображения метрик, настроим grafana, заходим на второй поднятый сервер и вводим следующие команды:
+```
+vagrant ssh garfana
+vagrant@grafana:~$ sudo su
+root@grafana:/home/vagrant# wget sudo apt-get install -y adduser libfontconfig1 musl^C
+root@grafana:/home/vagrant# sudo apt-get install -y adduser libfontconfig1 musl
+Reading package lists... Done
+Building dependency tree... Done
+Reading state information... Done
+adduser is already the newest version (3.137ubuntu1).
+adduser set to manually installed.
+...
+root@grafana:/home/vagrant# wget https://dl.grafana.com/oss/release/grafana_11.0.0_arm64.deb
+--2024-06-03 09:19:36--  https://dl.grafana.com/oss/release/grafana_11.0.0_arm64.deb
+Resolving dl.grafana.com (dl.grafana.com)... 146.75.118.217, 2a04:4e42:14::729
+Connecting to dl.grafana.com (dl.grafana.com)|146.75.118.217|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 110611380 (105M) [application/octet-stream]
+Saving to: ‘grafana_11.0.0_arm64.deb’
+
+grafana_11.0.0_arm64.deb                    100%[===========================================================================================>] 105.49M  18.7MB/s    in 6.5s    
+
+2024-06-03 09:19:48 (16.3 MB/s) - ‘grafana_11.0.0_arm64.deb’ saved [110611380/110611380]
+
+root@grafana:/home/vagrant# dpkg -i grafana_11.0.0_arm64.deb
+Selecting previously unselected package grafana.
+(Reading database ... 48742 files and directories currently installed.)
+Preparing to unpack grafana_11.0.0_arm64.deb ...
+Unpacking grafana (11.0.0) ...
+Setting up grafana (11.0.0) ...
+info: Selecting UID from range 100 to 999 ...
+root@grafana:/home/vagrant# systemctl start grafana-server
+root@grafana:/home/vagrant# systemctl status grafana-server
+● grafana-server.service - Grafana instance
+     Loaded: loaded (/usr/lib/systemd/system/grafana-server.service; disabled; preset: enabled)
+     Active: active (running) since Mon 2024-06-03 09:21:11 UTC; 7s ago
+       Docs: http://docs.grafana.org
+   Main PID: 3073 (grafana)
+      Tasks: 8 (limit: 4549)
+     Memory: 48.5M (peak: 49.0M)
+        CPU: 1.018s
+     CGroup: /system.slice/grafana-server.service
+             └─3073 /usr/share/grafana/bin/grafana server --config=/etc/grafana/grafana.ini --pidfile=/run/grafana/grafana-server.pid --packaging=deb cfg:default.paths.logs=/v>
+
+Jun 03 09:21:12 grafana grafana[3073]: logger=provisioning.dashboard t=2024-06-03T09:21:12.359384311Z level=info msg="starting to provision dashboards"
+Jun 03 09:21:12 grafana grafana[3073]: logger=provisioning.dashboard t=2024-06-03T09:21:12.359392727Z level=info msg="finished to provision dashboards"
+```
+
+- Поставим node_exporter
+```
+root@grafana:/home/vagrant# tar xzf node_exporter-1.8.1.linux-arm64.tar.gz 
+root@grafana:/home/vagrant# mv ./node_exporter-1.8.1.linux-arm64/node_exporter /usr/local/bin/
+root@grafana:/home/vagrant# rm -rf ./node_exporter-*
+root@grafana:/home/vagrant# sudo useradd --no-create-home --shell /bin/false node_exporter
+root@grafana:/home/vagrant# chown node_exporter:node_exporter /usr/local/bin/node_exporter
+root@grafana:/home/vagrant# systemctl start node_exporter
+root@grafana:/home/vagrant# systemctl status node_exporter
+● node_exporter.service - Node Exporter
+     Loaded: loaded (/etc/systemd/system/node_exporter.service; disabled; preset: enabled)
+     Active: active (running) since Mon 2024-06-03 09:59:13 UTC; 6s ago
+   Main PID: 3135 (node_exporter)
+      Tasks: 5 (limit: 4549)
+     Memory: 2.5M (peak: 2.7M)
+        CPU: 10ms
+     CGroup: /system.slice/node_exporter.service
+             └─3135 /usr/local/bin/node_exporter
+
+Jun 03 09:59:13 grafana node_exporter[3135]: ts=2024-06-03T09:59:13.849Z caller=node_exporter.go:118 level=info collector=time
+Jun 03 09:59:13 grafana node_exporter[3135]: ts=2024-06-03T09:59:13.849Z caller=node_exporter.go:118 level=info collector=timex
+```
+
+- Заходим на графану через веб и продалжаем настройку;
+
+<img width="1209" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/79ce3130-ae50-4ce5-bfe9-921f0b43ae69">
 
 
