@@ -63,4 +63,41 @@ root@web:~# systemctl status nginx
 
 Jun 15 13:14:37 web systemd[1]: Starting nginx.service - A high performance web server and a reverse proxy server...
 Jun 15 13:14:37 web systemd[1]: Started nginx.service - A high performance web server and a reverse proxy server.
+...
+root@web:~# ss -tln | grep 80
+LISTEN 0      511          0.0.0.0:80        0.0.0.0:*          
+LISTEN 0      511             [::]:80           [::]:*     
 ```
+
+> Также работу nginx можно проверить на хосте. В браузере ввведем в адерсную строку <http://192.168.65.11>
+<img width="988" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/e1c50e9a-dbb0-4fd0-8511-89990f1f0967">
+
+### Настройка сервера сбора логов
+
+- Откроем ещё одно окно терминала и подключимся по ssh к ВМ log: vagrant ssh rsyslog
+- Перейдем в пользователя root: sudo -i
+```
+vagrant ssh rsyslog
+vagrant@rsyslog:~$ sudo -i
+```
+
+> Все настройки Rsyslog хранятся в файле /etc/rsyslog.conf, проверим их.
+```
+root@rsyslog:~# cat /etc/rsyslog.conf
+...
+# provides UDP syslog reception
+module(load="imudp")
+input(type="imudp" port="514")
+
+# provides TCP syslog reception
+module(load="imtcp")
+input(type="imtcp" port="514")
+...
+$IncludeConfig /etc/rsyslog.d/*.conf
+$template RemoteLogs,"/var/log/rsyslog/%HOSTNAME%/%PROGRAMNAME%.log"
+*.* ?RemoteLogs
+& ~
+```
+
+> Видим что все необходимые настройки были добавлены при развертывании системы с помощью Ansible
+
