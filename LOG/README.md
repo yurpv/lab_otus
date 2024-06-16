@@ -174,3 +174,4 @@ $InputFileFacility local6
 $InputRunFileMonitor
 ```
 > После перезапускаем rsyslog "systemctl restart rsyslog" и проверяем на файлыы на сервере логов.
+<img width="541" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/591532b3-c065-4812-8795-4e324e93021a">
