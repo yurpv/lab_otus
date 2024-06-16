@@ -158,3 +158,19 @@ root@rsyslog:~# cat /var/log/rsyslog/web/nginx_error.log
 ```
 
 > Видим, что логи отправляются корректно. 
+
+### Настройка аудита, контролирующего изменения конфигурации nginx
+- За аудит отвечает утилита rsyslog, для этого нужно настроить и сервер, и клиент.
+- Настройка клиента
+- Создаем новый конфигурационный файл и добавляем следующие строки:
+```
+root@web:~# cat /etc/rsyslog.d/audit.conf
+$ModLoad imfile
+$InputFileName /var/log/nginx/access.log
+$InputFileTag tag_access_log:
+$InputFileStateFile access_log
+$InputFileSeverity crit
+$InputFileFacility local6
+$InputRunFileMonitor
+```
+> После перезапускаем rsyslog "systemctl restart rsyslog" и проверяем на файлыы на сервере логов.
