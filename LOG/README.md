@@ -26,3 +26,41 @@
 - Создаём каталог, в котором будут храниться настройки виртуальной машины. В каталоге создаём файл с именем [Vagrantfile](./Vagrantfile)
 - Результатом выполнения команды vagrant up станут 2 созданные виртуальные машины
 - Заходим на web-сервер: vagrant ssh web
+
+> Дальнейшие действия выполняются от пользователя root
+
+- Переходим в root пользователя
+```
+vagrant ssh web
+vagrant@web:~$ sudo -i
+```
+
+
+- Для правильной работы c логами, нужно, чтобы на всех хостах было настроено одинаковое время. Проверми дату на rsyslog и web
+```
+root@web:~# date
+Sun Jun 15 01:06:22 PM MSK 2024
+...
+root@rsyslog:~# date
+Sun Jun 15 01:08:00 PM MSK 2024
+```
+
+- Проверим, что nginx работает корректно
+```
+root@web:~# systemctl status nginx
+● nginx.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: enabled)
+     Active: active (running) since Sun 2024-06-15 13:14:37 MSK; 6min ago
+       Docs: man:nginx(8)
+   Main PID: 4812 (nginx)
+      Tasks: 3 (limit: 4549)
+     Memory: 2.3M (peak: 2.8M)
+        CPU: 7ms
+     CGroup: /system.slice/nginx.service
+             ├─4812 "nginx: master process /usr/sbin/nginx -g daemon on; master_process on;"
+             ├─4813 "nginx: worker process"
+             └─4814 "nginx: worker process"
+
+Jun 15 13:14:37 web systemd[1]: Starting nginx.service - A high performance web server and a reverse proxy server...
+Jun 15 13:14:37 web systemd[1]: Started nginx.service - A high performance web server and a reverse proxy server.
+```
