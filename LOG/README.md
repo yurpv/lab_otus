@@ -133,3 +133,28 @@ root@web:~# cat /etc/nginx/nginx.conf
 
 ```
 
+По умолчанию, error-логи отправляют логи, которые имеют severity: error, crit, alert и emerg. Если трубуется хранили или пересылать логи с другим severity, то это также можно указать в
+настройках nginx.
+
+- Поскольку наше приложение работает без ошибок, файл nginx_error.log не будет создан. Чтобы сгенерировать ошибку, можно переместить файл веб-страницы, который открывает nginx
+```
+mv /var/www/html/index.nginx-debian.html /var/www/ 
+```
+
+- После этого если зайдем на страницу nginx в браузере, то получим 403 ошибку.
+<img width="989" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/5f2c8db5-b310-4238-bd28-7a43aec3b247">
+
+- Далее заходим на log-сервер и смотрим информацию об nginx
+
+```
+root@rsyslog:~# cat /var/log/rsyslog/web/nginx_access.log
+2024-06-16T13:28:48+03:00 web nginx_access: 192.168.65.1 - - [16/Jun/2024:13:28:48 +0300] "GET / HTTP/1.1" 200 409 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 YaBrowser/24.4.0.0 Safari/537.36"
+2024-06-16T13:30:04+03:00 web nginx_access: 192.168.65.1 - - [16/Jun/2024:13:30:04 +0300] "GET / HTTP/1.1" 304 0 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 YaBrowser/24.4.0.0 Safari/537.36"
+...
+root@rsyslog:~# cat /var/log/rsyslog/web/nginx_error.log 
+2024-06-16T13:42:25+03:00 web nginx_error: 2024/06/16 13:42:25 [error] 3456#3456: *3 directory index of "/var/www/html/" is forbidden, client: 192.168.65.1, server: _, request: "GET / HTTP/1.1", host: "192.168.65.11"
+2024-06-16T13:42:26+03:00 web nginx_error: 2024/06/16 13:42:26 [error] 3456#3456: *3 directory index of "/var/www/html/" is forbidden, client: 192.168.65.1, server: _, request: "GET / HTTP/1.1", host: "192.168.65.11"
+2024-06-16T13:53:07+03:00 web nginx_error: 2024/06/16 13:53:07 [error] 3457#3457: *5 directory index of "/var/www/html/" is forbidden, client: 192.168.65.1, server: _, request: "GET / HTTP/1.1", host: "192.168.65.11"
+```
+
+> Видим, что логи отправляются корректно. 
