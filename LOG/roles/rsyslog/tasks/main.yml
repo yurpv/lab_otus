@@ -1,0 +1,14 @@
+---
+  # tasks file for rsyslog
+- name: To change rsyslog.conf
+  shell: |
+    sed -i 's/#module(load="imudp")/module(load="imudp")/g' /etc/rsyslog.conf
+    sed -i 's/#input(type="imudp"/input(type="imudp"/g' /etc/rsyslog.conf
+    sed -i 's/#input(type="imudp"/input(type="imudp"/g' /etc/rsyslog.conf
+    sed -i 's/#module(load="imtcp"/module(load="imtcp"/g' /etc/rsyslog.conf
+    sed -i 's/#input(type="imtcp"/input(type="imtcp"/g' /etc/rsyslog.conf
+    echo '$template RemoteLogs,"/var/log/rsyslog/%HOSTNAME%/%PROGRAMNAME%.log"' >> /etc/rsyslog.conf
+    echo "*.* ?RemoteLogs" >> /etc/rsyslog.conf
+    echo "& ~" >> /etc/rsyslog.conf
+  notify:
+    - rsyslog restart

@@ -14,25 +14,16 @@
       community.general.timezone:
         name: Europe/Moscow
 
+- name: Configure log server
+  hosts: rsyslog
+  become: yes
+  become_user: root
+  roles:
+    - role: rsyslog
 
-- name: Web | Install and configure NGINX
+- name: Install and configure web server
   hosts: web
   become: yes
   become_user: root
-  tasks:
-    - name: update
-      apt: update_cache=yes
-
-    - name: Install Nginx
-      apt: name=nginx state=latest
-
-      notify:
-        - restart nginx
-
-  handlers:
-    - name: restart nginx
-      service: name=nginx state=reloaded
-
-
-
-
+  roles:
+    - role: nginx
