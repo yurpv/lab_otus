@@ -99,5 +99,37 @@ $template RemoteLogs,"/var/log/rsyslog/%HOSTNAME%/%PROGRAMNAME%.log"
 & ~
 ```
 
-> Видим что все необходимые настройки были добавлены при развертывании системы с помощью Ansible
+> Видим что все необходимые настройки были добавлены при развертывании системы с помощью Ansible. </br>
+> Данные параметры будут отправлять в папку /var/log/rsyslog логи, которые будут приходить от других серверов. Например, Access-логи nginx от сервера web, будут идти в файл /var/log/rsyslog/web/nginx_access.log
+
+- Перезапускаем службу rsyslog, если ошибок не допущено, то у нас будут видны открытые порты TCP,UDP 514
+```
+root@rsyslog:~# ss -tunlp | grep 514
+udp   UNCONN 0      0                  0.0.0.0:514       0.0.0.0:*    users:(("rsyslogd",pid=3092,fd=5))        
+udp   UNCONN 0      0                     [::]:514          [::]:*    users:(("rsyslogd",pid=3092,fd=6))        
+tcp   LISTEN 0      25                 0.0.0.0:514       0.0.0.0:*    users:(("rsyslogd",pid=3092,fd=7))        
+tcp   LISTEN 0      25                    [::]:514          [::]:*    users:(("rsyslogd",pid=3092,fd=8)) 
+```
+
+### Далее настроим отправку логов с web-сервера
+
+- Заходим на web сервер: vagrant ssh web
+- Переходим в root пользователя: sudo -i
+- Находим в файле /etc/nginx/nginx.conf раздел с логами и приводим их к следующему виду
+
+> Так как мы все настроили с помощью Ansible, проверяем верно у нас все добавилось.
+
+```
+root@web:~# cat /etc/nginx/nginx.conf
+...
+##
+        # Logging Settings
+        ##
+
+        access_log /var/log/nginx/access.log;
+        access_log syslog:server=192.168.65.10:514,tag=nginx_access,severity=info;
+        error_log /var/log/nginx/error.log;
+        error_log syslog:server=192.168.65.10:514,tag=nginx_error;
+
+```
 
