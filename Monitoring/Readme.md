@@ -184,7 +184,7 @@ root@prometheus:/home/vagrant# systemctl status node_exporter
              └─3035 /usr/local/bin/node_exporter
 ```
 
-- Заходим через браузер на веб страницу нашего alertmanager:
+- Заходим через браузер на веб страницу нашего node_exporter:
 <img width="855" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/b887b166-c914-4870-90d4-4d683d6cc365">
 
 - Настроим отбражение метрик в prometheus:
