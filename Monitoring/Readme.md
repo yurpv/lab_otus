@@ -301,7 +301,7 @@ Jun 03 09:59:13 grafana node_exporter[3135]: ts=2024-06-03T09:59:13.849Z caller=
 <img width="678" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/3c7b2941-d141-4cac-8a12-9155e78c7abe">
 <img width="759" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/263f0aad-7c13-4c6f-9841-0ccd3c6a38e5">
 
-- После загрузки дашборда, мы увидим увиидм метрики в графическом отображении
+- После загрузки дашборда, мы увидим увидим метрики в графическом отображении
 - <img width="1513" alt="image" src="https://github.com/yurpv/lab_otus/assets/162872411/db72ab8c-e226-4dcb-a4b1-64e2da392dc7">
 
 
