@@ -133,3 +133,14 @@ lrwxrwxrwx root   root         39 Tue, 2024-04-23 12:46:24 etc/resolv.conf -> ..
 lrwxrwxrwx root   root         13 Mon, 2024-04-08 19:20:47 etc/rmt -> /usr/sbin/rmt
 lrwxrwxrwx root   root         16 Tue, 2024-04-23 12:46:02 etc/vconsole.conf -> default/keyboard
 ```
+
+- Проверим восстановление файлов, удалим файл /etc/hostname и восстановим из бекапа.
+```
+root@client:~# rm /etc/hostname
+root@client:~# cat /etc/hostname
+cat: /etc/hostname: No such file or directory
+root@client:~# cd /etc/
+root@client:/etc# borg extract borg@192.168.65.160:/var/backup/::etc-2024-06-19_10:53:54 /etc/hostname
+root@client:/etc#cat etc/hostname 
+client
+```
