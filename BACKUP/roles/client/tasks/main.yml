@@ -1,0 +1,22 @@
+---
+  # tasks file for client
+- name: Create a directory
+  file:
+    path: /home/borg/.ssh
+    owner: "{{ user_name }}"
+    group: "{{ user_name }}"
+    state: directory
+    mode: '700'
+
+- name: Generate an OpenSSH encrypted private key
+  community.crypto.openssh_keypair:
+    path: /home/borg/.ssh/id_ssh_rsa
+    passphrase: "{{ user_password }}"
+
+  - name: Copy files
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+      with_items:
+        - { src: 'templates/borg-backup.service', dest: '/etc/systemd/system/borg-backup.service'}
+        - { src: 'templates/borg-backup.timer', dest: '/etc/systemd/system/borg-backup.timer'}

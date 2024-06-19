@@ -1,0 +1,11 @@
+---
+# handlers file for client
+- name: Enable service borg-backup.timer, and not touch the state
+  service:
+    name: borg-backup.timer
+    enabled: yes
+
+- name: Start service borg-backup.timer, if not started
+  ansible.builtin.service:
+    name: borg-backup.timer
+    state: started

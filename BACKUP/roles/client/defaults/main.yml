@@ -1,0 +1,8 @@
+---
+# defaults file for client
+
+user_name: borg
+user_password: Otus2014
+server_ip: 192.168.65.160
+ssh_port: 22
+ssh_public_key: /home/borg/.ssh/id_rsa.pub

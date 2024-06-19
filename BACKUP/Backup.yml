@@ -1,0 +1,47 @@
+---
+- hosts: all
+  become: yes
+  become_user: root
+  tasks:
+    - name: add vagrant sudoers
+      shell: printf "vagrant ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+    - name: update
+      apt:
+        update_cache: yes
+
+    - name: Set timezone to Europe/Moscow
+      community.general.timezone:
+        name: Europe/Moscow
+
+    - name: Borgbackup is installed
+      package:
+        name: borgbackup
+
+    - name: Add group
+      group:
+        name: borg
+        state: present
+
+    - name: Add user to the group
+      user:
+        name: borg
+        password:  "{{ 'Otus2024' | password_hash('sha512') }}"
+        groups: borg
+        home: /home/borg
+        shell: /bin/bash
+        append: yes
+
+- name: Configure backup server
+  hosts: backup
+  become: yes
+  become_user: root
+  roles:
+      - role: backup
+
+- name: Configure client server
+  hosts: client
+  become: yes
+  become_user: root
+  roles:
+    - role: client

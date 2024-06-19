@@ -1,0 +1,2 @@
+backup ansible_host=192.168.65.160 ansible_port=22 ansible_private_key_file=.vagrant/machines/backup/vmware_desktop/private_key
+client ansible_host=192.168.65.150 ansible_port=22 ansible_private_key_file=.vagrant/machines/client/vmware_desktop/private_key

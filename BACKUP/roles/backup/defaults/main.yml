@@ -1,0 +1,10 @@
+---
+# defaults file for borg_server
+
+user_name: borg
+user_password: Otus2024
+
+borg_user_path: /home/borg
+borg_backups_path: /var/backup
+borg_backups_set_permissions: yes
+borg_backups_path_clean: no
