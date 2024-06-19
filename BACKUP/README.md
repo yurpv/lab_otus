@@ -58,4 +58,78 @@ drwxr-x--- 4 borg users 4096 Jun 19 10:24 ../
 ```
 
 - Перходим на client, проверяем как правильно отработал playbook.
-  
+> Нужно проверить создания пользователя и группы borg, католог .ssh, создания файлов для systemd
+```
+root@client:~# cat /etc/passwd | grep borg
+borg:x:1001:100::/home/borg:/bin/bash
+root@client:~# cat /etc/group | grep borg
+borg:x:1001:borg
+root@client:~# ll /home/borg/.ssh/
+total 16
+drwx------ 2 borg borg  4096 Jun 19 10:51 ./
+drwxr-x--- 3 borg users 4096 Jun 19 10:52 ../
+root@client:~# ll /etc/systemd/system | grep borg
+-rw-r--r--  1 root root  653 Jun 19 11:14 borg-backup.service
+-rw-r--r--  1 root root   96 Jun 19 11:15 borg-backup.timer
+```
+
+- После того как убедились что все в порядке, приступаем к работе с borgbackup.
+- Инициализируем репозиторий borg на backup сервере с client сервера.
+```
+root@client:~# borg init --encryption=repokey borg@192.168.65.160:/var/backup/
+The authenticity of host '192.168.65.160 (192.168.65.160)' can't be established.
+ED25519 key fingerprint is SHA256:DH6Cb/kTMDCyLGC6GLSea+1fBhkpoHN6NPHDyFasVYc.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Remote: Warning: Permanently added '192.168.65.160' (ED25519) to the list of known hosts.
+```
+
+- Запускаем для проверки создания бэкапа.
+```
+root@client:~# borg create --stats --list borg@192.168.65.160:/var/backup/::"etc-{now:%Y-%m-%d_%H:%M:%S}" /etc
+borg@192.168.65.160's password: 
+A /etc/subuid
+s /etc/mtab
+s /etc/os-release
+s /etc/resolv.conf
+s /etc/rmt
+s /etc/vconsole.conf
+s /etc/vtrgb
+...
+------------------------------------------------------------------------------
+Repository: ssh://borg@192.168.65.160/var/backup
+Archive name: etc-2024-06-19_10:53:54
+Archive fingerprint: 8548919ad1b341bc63d007343d36d3f96101eaf9b0fee7dbeafb2ee5e1e9a5b9
+Time (start): Wed, 2024-06-19 10:53:59
+Time (end):   Wed, 2024-06-19 10:53:59
+Duration: 0.26 seconds
+Number of files: 819
+Utilization of max. archive size: 0%
+------------------------------------------------------------------------------
+                       Original size      Compressed size    Deduplicated size
+This archive:                2.28 MB              1.01 MB            980.05 kB
+All archives:                2.28 MB              1.01 MB              1.05 MB
+
+                       Unique chunks         Total chunks
+Chunk index:                     783                  811
+```
+
+- Смотрим, что у нас получилось.
+```
+root@client:~# borg list borg@192.168.65.160:/var/backup/
+borg@192.168.65.160's password: 
+etc-2024-06-19_10:53:54              Wed, 2024-06-19 10:53:59 [8548919ad1b341bc63d007343d36d3f96101eaf9b0fee7dbeafb2ee5e1e9a5b9]
+```
+
+- Смотрим список файлов
+```
+root@client:~# borg list borg@192.168.65.160:/var/backup/::etc-2024-06-19_10:53:54
+borg@192.168.65.160's password: 
+drwxr-xr-x root   root          0 Wed, 2024-06-19 10:51:24 etc
+-rw-r--r-- root   root         39 Wed, 2024-06-19 10:51:24 etc/subuid
+lrwxrwxrwx root   root         19 Tue, 2024-04-23 12:46:02 etc/mtab -> ../proc/self/mounts
+lrwxrwxrwx root   root         21 Mon, 2024-04-22 16:08:03 etc/os-release -> ../usr/lib/os-release
+lrwxrwxrwx root   root         39 Tue, 2024-04-23 12:46:24 etc/resolv.conf -> ../run/systemd/resolve/stub-resolv.conf
+lrwxrwxrwx root   root         13 Mon, 2024-04-08 19:20:47 etc/rmt -> /usr/sbin/rmt
+lrwxrwxrwx root   root         16 Tue, 2024-04-23 12:46:02 etc/vconsole.conf -> default/keyboard
+```
