@@ -144,3 +144,11 @@ root@client:/etc# borg extract borg@192.168.65.160:/var/backup/::etc-2024-06-19_
 root@client:/etc#cat etc/hostname 
 client
 ```
+
+- Проверяем работу таймера
+```
+root@client:/etc# systemctl list-timers --all 
+NEXT                            LEFT LAST                              PASSED UNIT                         ACTIVATES                     
+Wed 2024-06-19 12:51:38 MSK 4min 27s Wed 2024-06-19 12:46:38 MSK      32s ago borg-backup.timer            borg-backup.service
+
+```
