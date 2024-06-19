@@ -28,10 +28,34 @@
 
 - Создаём каталог, в котором будут храниться настройки виртуальной машины. В каталоге создаём файл с именем [Vagrantfile](./Vagrantfile)
 - Результатом выполнения команды vagrant up станут 2 созданные виртуальные машины backup и client.
-- Заходим на сервере backup как правильно отработал playbook.
-> Дальнейшие действия выполняются от пользователя root
+- Заходим на сервере backup, проверяем как правильно отработал playbook.
+> Нужно проверить создания lv и монтирование ее к разделу /var/backup, создания пользователя и группы borg, а так же католог .ssh
 ```
 vagrant ssh backup
 vagrant@backup:~$ sudo -i
- 
+root@backup:~# lsblk 
+NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sda                         8:0    0   64G  0 disk 
+├─sda1                      8:1    0    1G  0 part /boot/efi
+├─sda2                      8:2    0    2G  0 part /boot
+└─sda3                      8:3    0 60.9G  0 part 
+  ├─ubuntu--vg-ubuntu--lv 252:0    0 30.5G  0 lvm  /
+  └─ubuntu--vg-backup     252:1    0    2G  0 lvm  /var/backup
+sr0                        11:0    1 1024M  0 rom
+...
+root@backup:~# ll /var/ | grep backup
+drwxr-xr-x  3 borg borg   4096 Jun 19 12:02 backup/
+...
+root@backup:~# cat /etc/passwd | grep borg
+borg:x:1001:100::/home/borg:/bin/bash
+root@backup:~# cat /etc/group | grep borg
+borg:x:1001:borg
+root@backup:~# ll /home/borg/.ssh/
+total 12
+drwx------ 2 borg borg  4096 Jun 19 10:14 ./
+drwxr-x--- 4 borg users 4096 Jun 19 10:24 ../
+-rw-r----- 1 borg borg   123 Jun 19 11:12 authorized_keys
 ```
+
+- Перходим на client, проверяем как правильно отработал playbook.
+  
