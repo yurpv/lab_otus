@@ -176,25 +176,25 @@ Broadcast-адрес нужен для рассылки всем устройс�
 
 | Server | IP and Bitmask | OS |
 | --- | --- | --- |
-| inetRouter | Default-NAT address VirtualBox 192.168.255.1/30 | Ubuntu 22.04 |
+| inetRouter | Default-NAT address VirtualBox 172.16.255.1/30 | Ubuntu 22.04 |
 | centralRouter | 192.168.255.2/30 |Ubuntu 22.04 |
-|| 192.168.0.1/28 ||
-|| 192.168.0.33/28 ||
-|| 192.168.0.65/26 ||
-|| 192.168.255.9/30 ||
-|| 192.168.255.5/30 ||
-| centralServer | 192.168.0.2/28 | Ubuntu 22.04 |
-| office1Router | 192.168.255.10/30 | Ubuntu 22.04 |
-|| 192.168.2.1/26 ||
-|| 192.168.2.65/26 ||
-|| 192.168.2.129/26 ||
-|| 192.168.2.193/26 ||
-| office1Server | 192.168.2.130/26 | Ubuntu 22.04 |
-| office2Router | 192.168.255.6/30 | Ubuntu 22.04 |
-|| 192.168.1.1/25 ||
-|| 192.168.1.129/26 ||
-|| 192.168.1.193/26 ||
-| office2Server | 192.168.1.2/25 | Ubuntu 22.04 |
+|| 172.16.0.1/28 ||
+|| 172.16.0.33/28 ||
+|| 172.16.0.65/26 ||
+|| 172.16.255.9/30 ||
+|| 172.16.255.5/30 ||
+| centralServer | 172.16.0.2/28 | Ubuntu 22.04 |
+| office1Router | 172.16.255.10/30 | Ubuntu 22.04 |
+|| 172.16.2.1/26 ||
+|| 172.16.2.65/26 ||
+|| 172.16.2.129/26 ||
+|| 172.16.2.193/26 ||
+| office1Server | 172.16.2.130/26 | Ubuntu 22.04 |
+| office2Router | 172.16.255.6/30 | Ubuntu 22.04 |
+|| 172.16.1.1/25 ||
+|| 172.16.1.129/26 ||
+|| 172.16.1.193/26 ||
+| office2Server | 172.16.1.2/25 | Ubuntu 22.04 |
 
 Рекомендация:
 
@@ -204,165 +204,117 @@ Broadcast-адрес нужен для рассылки всем устройс�
 
 В полученном vagrant file в :box_name меняем образы CentOS на образы ubuntu 22.04 и добавляем оставшиеся хосты. Также нужно удалить все команды, выполняемые на хостах: 
 
-```ruby
-# -*- mode: ruby -*-
-# vim: set ft=ruby :
+```
+ENV['VAGRANT_SERVER_URL'] = 'https://vagrant.elab.pro'
+
 MACHINES = {
-    :inetRouter => {
-        :box_name => "centos/7",
-        #:public => {:ip => '10.10.10.1', :adapter => 1},
+  :inetRouter => {
+        :box_name => "ubuntu/jammy64",
+        :vm_name => "inetRouter",
+        #:public => {:ip => "10.10.10.1", :adapter => 1},
         :net => [
-            {ip: '192.168.255.1', adapter: 2, netmask: "255.255.255.252", virtualbox__intnet: "router-net"},
-        ]
-    },
-    :centralRouter => {
-        :box_name => "centos/7",
+                    #ip, adpter, netmask, virtualbox__intnet
+                    ["172.16.255.1", 2, "255.255.255.252",  "router-net"],
+                    ["172.16.50.10", 8, "255.255.255.0"],
+                ]
+  },
+
+  :centralRouter => {
+        :box_name => "ubuntu/jammy64",
+        :vm_name => "centralRouter",
         :net => [
-            {ip: '192.168.255.2', adapter: 2, netmask: "255.255.255.252", virtualbox__intnet: "router-net"},
-            {ip: '192.168.0.1', adapter: 3, netmask: "255.255.255.240", virtualbox__intnet: "dir-net"},
-            {ip: '192.168.0.33', adapter: 4, netmask: "255.255.255.240", virtualbox__intnet: "hw-net"},
-            {ip: '192.168.0.65', adapter: 5, netmask: "255.255.255.192", virtualbox__intnet: "mgt-net"},
-        ]
-    },
-    :centralServer => {
-        :box_name => "centos/7",
+                   ["172.16.255.2",  2, "255.255.255.252",  "router-net"],
+                   ["172.16.0.1",    3, "255.255.255.240",  "dir-net"],
+                   ["172.16.0.33",   4, "255.255.255.240",  "hw-net"],
+                   ["172.16.0.65",   5, "255.255.255.192",  "mgt-net"],
+                   ["172.16.255.9",  6, "255.255.255.252",  "office1-central"],
+                   ["172.16.255.5",  7, "255.255.255.252",  "office2-central"],
+                   ["172.16.50.11",  8, "255.255.255.0"],
+                ]
+  },
+
+  :centralServer => {
+        :box_name => "ubuntu/jammy64",
+        :vm_name => "centralServer",
         :net => [
-            {ip: '192.168.0.2', adapter: 2, netmask: "255.255.255.240", virtualbox__intnet: "dir-net"},
-            {adapter: 3, auto_config: false, virtualbox__intnet: true},
-            {adapter: 4, auto_config: false, virtualbox__intnet: true},
-        ]
-    },
+                   ["172.16.0.2",    2, "255.255.255.240",  "dir-net"],
+                   ["172.16.50.12",  8, "255.255.255.0"],
+                ]
+  },
+
+  :office1Router => {
+        :box_name => "ubuntu/jammy64",
+        :vm_name => "office1Router",
+        :net => [
+                   ["172.16.255.10",  2,  "255.255.255.252",  "office1-central"],
+                   ["172.16.2.1",     3,  "255.255.255.192",  "dev1-net"],
+                   ["172.16.2.65",    4,  "255.255.255.192",  "test1-net"],
+                   ["172.16.2.129",   5,  "255.255.255.192",  "managers-net"],
+                   ["172.16.2.193",   6,  "255.255.255.192",  "office1-net"],
+                   ["172.16.50.20",   8,  "255.255.255.0"],
+                ]
+  },
+
+  :office1Server => {
+        :box_name => "ubuntu/jammy64",
+        :vm_name => "office1Server",
+        :net => [
+                   ["172.16.2.130",  2,  "255.255.255.192",  "managers-net"],
+                   ["172.16.50.21",  8,  "255.255.255.0"],
+                ]
+  },
+
+  :office2Router => {
+       :box_name => "ubuntu/jammy64",
+       :vm_name => "office2Router",
+       :net => [
+                   ["172.16.255.6",  2,  "255.255.255.252",  "office2-central"],
+                   ["172.16.1.1",    3,  "255.255.255.128",  "dev2-net"],
+                   ["172.16.1.129",  4,  "255.255.255.192",  "test2-net"],
+                   ["172.16.1.193",  5,  "255.255.255.192",  "office2-net"],
+                   ["172.16.50.30",  8,  "255.255.255.0"],
+               ]
+  },
+
+  :office2Server => {
+       :box_name => "ubuntu/jammy64",
+       :vm_name => "office2Server",
+       :net => [
+                  ["172.16.1.2",    2,  "255.255.255.128",  "dev2-net"],
+                  ["172.16.50.31",  8,  "255.255.255.0"],
+               ]
+  }
 }
 
 Vagrant.configure("2") do |config|
-    MACHINES.each do |boxname, boxconfig|
-        config.vm.define boxname do |box|
-            
-            box.vm.box = boxconfig[:box_name]
-            box.vm.host_name = boxname.to_s
-            boxconfig[:net].each do |ipconf|
-                box.vm.network "private_network", ipconf
-            end
+  MACHINES.each do |boxname, boxconfig|
+    config.vm.define boxname do |box|
+      box.vm.box = boxconfig[:box_name]
+      box.vm.host_name = boxconfig[:vm_name]
 
-            if boxconfig.key?(:public)
-                box.vm.network "public_network", boxconfig[:public]
-            end
+      box.vm.provider "virtualbox" do |v|
+        v.memory = 768
+        v.cpus = 1
+       end
 
-            box.vm.provision "shell", inline: <<-SHELL
-                mkdir -p ~root/.ssh
-                cp ~vagrant/.ssh/auth* ~root/.ssh
-            SHELL
+      boxconfig[:net].each do |ipconf|
+        box.vm.network("private_network", ip: ipconf[0], adapter: ipconf[1], netmask: ipconf[2], virtualbox__intnet: ipconf[3])
+      end
 
-            case boxname.to_s
-            when "inetRouter"
-                box.vm.provision "shell", run: "always", inline: <<-SHELL
-                    sysctl net.ipv4.conf.all.forwarding=1
-                    iptables -t nat -A POSTROUTING ! -d 192.168.0.0/16 -o eth0 -j MASQUERADE
-                SHELL
-            when "centralRouter"
-                box.vm.provision "shell", run: "always", inline: <<-SHELL
-                    sysctl net.ipv4.conf.all.forwarding=1
-                    echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0
-                    echo "GATEWAY=192.168.255.1" >> /etc/sysconfig/network-scripts/ifcfg-eth1
-                    systemctl restart network
-                SHELL
-            when "centralServer"
-                box.vm.provision "shell", run: "always", inline: <<-SHELL
-                    echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0
-                    echo "GATEWAY=192.168.0.1" >> /etc/sysconfig/network-scripts/ifcfg-eth1
-                    systemctl restart network
-                SHELL
-            end
-        end
+      if boxconfig.key?(:public)
+        box.vm.network "public_network", boxconfig[:public]
+      end
+
+      box.vm.provision "shell", inline: <<-SHELL
+        mkdir -p ~root/.ssh
+        cp ~vagrant/.ssh/auth* ~root/.ssh
+        sudo apt update && apt upgrade -y
+        sudo apt install traceroute -y  
+      SHELL
     end
+  end
 end
-```
 
-Данный Vagrantfile развернет нам 3 хоста: inetRouter, centralRouter и centralServer.
-
-Исходя их схемы нам ещё потребуется развернуть 4 сервера:
-
-- office1Router
-- office1Server
-- office2Router
-- office2Server
-
-Опираясь на таблицу и схему мы можем дописать хосты в Vagrantfile:
-
-```ruby
-MACHINES = {
-    :inetRouter => {
-        :box_name => "centos/7",
-        :vm_name => "inetRouter",
-        #:public => {:ip => '10.10.10.1', :adapter => 1},
-        :net => [
-            {ip: '192.168.255.1', adapter: 2, netmask: "255.255.255.252", virtualbox__intnet: "router-net"},
-            {ip: '192.168.50.10', adapter: 8},
-        ]
-    },
-    :centralRouter => {
-        :box_name => "centos/7",
-        :vm_name => "centralRouter",
-        :net => [
-            {ip: '192.168.255.2', adapter: 2, netmask: "255.255.255.252", virtualbox__intnet: "router-net"},
-            {ip: '192.168.0.1', adapter: 3, netmask: "255.255.255.240", virtualbox__intnet: "dir-net"},
-            {ip: '192.168.0.33', adapter: 4, netmask: "255.255.255.240", virtualbox__intnet: "hw-net"},
-            {ip: '192.168.0.65', adapter: 5, netmask: "255.255.255.192", virtualbox__intnet: "mgt-net"},
-            {ip: '192.168.255.9', adapter: 6, netmask: "255.255.255.252", virtualbox__intnet: "office1-central"},
-            {ip: '192.168.255.5', adapter: 7, netmask: "255.255.255.252", virtualbox__intnet: "office2-central"},
-            {ip: '192.168.50.11', adapter: 8},            
-        ]
-    },
-    :centralServer => {
-        :box_name => "centos/7",
-        :vm_name => "centralServer",
-        :net => [
-            {ip: '192.168.0.2', adapter: 2, netmask: "255.255.255.240", virtualbox__intnet: "dir-net"},
-            {adapter: 3, auto_config: false, virtualbox__intnet: true},
-            {adapter: 4, auto_config: false, virtualbox__intnet: true},
-            {ip: '192.168.50.12', adapter: 8},
-        ]
-    },
-    :office1Router => {
-        :box_name => "ubuntu/focal64",
-        :vm_name => "office1Router",
-        :net => [
-            {ip: '192.168.255.10', adapter: 2, netmask: "255.255.255.252", virtualbox__intnet: "office1-central"},
-            {ip: '192.168.2.1', adapter: 3, netmask: "255.255.255.192", virtualbox__intnet: "dev1-net"},
-            {ip: '192.168.2.65', adapter: 4, netmask: "255.255.255.192", virtualbox__intnet: "test1-net"},
-            {ip: '192.168.2.129', adapter: 5, netmask: "255.255.255.192", virtualbox__intnet: "managers-net"},
-            {ip: '192.168.2.193', adapter: 6, netmask: "255.255.255.192", virtualbox__intnet: "office1-net"},
-            {ip: '192.168.50.20', adapter: 8},
-        ]
-    },
-    :office1Server => {
-        :box_name => "ubuntu/focal64",
-        :vm_name => "office1Server",
-        :net => [
-            {ip: '192.168.2.130', adapter: 2, netmask: "255.255.255.192", virtualbox__intnet: "managers-net"},
-            {ip: '192.168.50.21', adapter: 8},
-        ]
-    },
-    :office2Router => {
-        :box_name => "debian/bullseye64",
-        :vm_name => "office2Router",
-        :net => [
-            {ip: '192.168.255.6', adapter: 2, netmask: "255.255.255.252", virtualbox__intnet: "office2-central"},
-            {ip: '192.168.1.1', adapter: 3, netmask: "255.255.255.128", virtualbox__intnet: "dev2-net"},
-            {ip: '192.168.1.129', adapter: 4, netmask: "255.255.255.192", virtualbox__intnet: "test2-net"},
-            {ip: '192.168.1.193', adapter: 5, netmask: "255.255.255.192", virtualbox__intnet: "office2-net"},
-            {ip: '192.168.50.30', adapter: 8},
-        ]
-    },
-    :office2Server => {
-        :box_name => "debian/bullseye64",
-        :vm_name => "office2Server",
-        :net => [
-            {ip: '192.168.1.2', adapter: 2, netmask: "255.255.255.128", virtualbox__intnet: "dev2-net"},
-            {ip: '192.168.50.31', adapter: 8},
-        ]
-    }    
-}
 ```
 
 В данный Vagrantfile мы добавили информацию о 4 новых серверах, также к старым серверам добавили 2 интерфейса для соединения сетей офисов (в коде выделены полужирным)
