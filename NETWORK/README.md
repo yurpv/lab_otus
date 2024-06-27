@@ -388,40 +388,31 @@ COMMIT
 
 Выполним идентичные действия с помощью Ansible, для этого в playbook добавим следующие команды:
 
-```bash
----
-- hosts: all
-  become: true
-  tasks:
-  - name: Set up NAT on inetRouter
-    block:
-      - name: install iptables
-        yum:
-          name:
-            - iptables
-            - iptables-services
-          state: present
-          update_cache: true
-
-      - name: copy iptables config
-        template:
-          src: iptables
-          dest: /etc/sysconfig/iptables
-          owner: root
-          group: root
-          mode: 0600
-
-      - name: start and enable iptables service
-        service:
-          name: iptables
-          state: restarted
-          enabled: true
-    when: (ansible_hostname == "inetRouter")
 ```
+- name: Install IPtables-persistent
+      apt:
+        name:
+          - iptables-persistent
+        update_cache: yes
+        state: present
+      when: (ansible_hostname == "inetRouter")
+
+ - name: Set up NAT on hosts
+    template: 
+      src: "{{ item.src }}"
+      dest: "{{ item.dest }}"
+      owner: root
+      group: root
+      mode: "{{ item.mode }}"
+    with_items:
+      - { src: "iptables_rules.ipv4", dest: "/etc/iptables/rules.v4", mode: "0644" }
+   
+```
+Модуль template копирует файл, которые были указаны выше. Для файла уже установлен атрибут выполнения файла.  
 
 Все действия выполняются в блоке, это нужно для того, чтобы в конце указать условие «Выполнять только на хосте inetRouter»
 
-Первый модуль «install iptables» устанавливает нам необходимые пакеты. Второй модуль копирует нам конфигурационный файл правил Iptables (который мы рассматривали в настройке NAT вручную). Третий модуль производит старт службы iptables и её добавление в автозапуск.
+Первый модуль «iptables-persistent» устанавливает нам необходимые пакеты. Второй модуль копирует нам конфигурационный файл правил Iptables (который мы рассматривали в настройке NAT вручную). 
 
 #### Маршрутизация транзитных пакетов (IP forward)
 
