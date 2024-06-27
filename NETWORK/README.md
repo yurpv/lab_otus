@@ -420,14 +420,15 @@ COMMIT
 
 Включить её можно командой:
 
-```bash
+```
 sysctl net.ipv4.conf.all.forwarding=1
 ```
 
 Посмотреть статус форвардинга можно командой:
 
-```bash
-sysctl net.ipv4.ip_forward
+```
+root@inetRouter:~# sysctl net.ipv4.ip_forward
+net.ipv4.ip_forward = 1
 ```
 
 Если параметр равен 1, то маршрутизация транзитных пакетов включена, если 0 — отключена.
@@ -449,28 +450,38 @@ sysctl net.ipv4.ip_forward
 
 В условии указано, что изменения будут применяться только для группы «routers», группа routers создана в hosts-файле:
 
-```bash
+```
 [routers]
-inetRouter ansible_host=192.168.50.10 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/inetRouter/virtualbox/private_key
-centralRouter ansible_host=192.168.50.11 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/centralRouter/virtualbox/private_key
-office1Router ansible_host=192.168.50.20 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/office1Router/virtualbox/private_key
-office2Router ansible_host=192.168.50.30 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/office2Router/virtualbox/private_key
+inetRouter ansible_host=172.16.50.10 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/inetRouter/virtualbox/private_key
+centralRouter ansible_host=172.16.50.11 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/centralRouter/virtualbox/private_key
+office1Router ansible_host=172.16.50.20 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/office1Router/virtualbox/private_key
+office2Router ansible_host=172.16.50.30 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/office2Router/virtualbox/private_key
+
 [servers]
-office1Server ansible_host=192.168.50.21 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/office1Server/virtualbox/private_key
-office2Server ansible_host=192.168.50.31 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/office2Server/virtualbox/private_key
-centralServer ansible_host=192.168.50.12 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/centralServer/virtualbox/private_key
+centralServer ansible_host=172.16.50.12 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/inetRouter/virtualbox/private_key
+office1Server ansible_host=172.16.50.21 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/centralRouter/virtualbox/private_key
+office2Server ansible_host=172.16.50.31 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/office1Router/virtualbox/private_key
 ```
 
 > Файл hosts — это файл инвентаризации, в нем указан список серверов, их адреса, группы и способы доступа на сервер.
 
-#### Отключение маршрута по умолчанию на интерфейсе eth0
+#### Отключение маршрута по умолчанию на интерфейсе eth0 (в нашем случае enp0s3)
 
 При разворачивании нашего стенда Vagrant создает в каждом сервере свой интерфейс, через который у сервера появляется доступ в интернет. Отключить данный порт нельзя, так как через него Vagrant подключается к серверам. Обычно маршрут по умолчанию прописан как раз на этот интерфейс, данный маршрут нужно отключить.
 
-Для отключения дефолтного маршрута нужно в файле /etc/sysconfig/network-scripts/ifcfg-eth0 найти строку
+Для отключения дефолтного маршрута нужно в файле /etc/netplan/00-installer-config.yaml
 
-```bash
-DEFROUTE=yes и поменять её на DEFROUTE=no
+```
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    eth0:
+      dhcp4: true
+      dhcp4-overrides:
+          use-routes: false
+      dhcp6: false
+  version: 2
+
 ```
 
 Vagrant по умолчанию не добавляет строку DEFROUTE=yes, поэтому нам можно просто добавить строку DEFROUTE=no
@@ -481,15 +492,22 @@ Vagrant по умолчанию не добавляет строку DEFROUTE=ye
 echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0
 ```
 
-Данное действие нужно выполнить только на CentOS-серверах centralRouter и centralServer
+После внесения данных изменений перезапускаем сетевую службу: 
+netplan try
 
-После удаление маршрута по умолчанию, нужно добавить дефолтный маршрут на другой порт. Делается это с помощью идентичной команды, например, команда добавления маршрута по умолчанию на сервере centralServer будет такой:
+Отключение дефолтного маршрута требуется настроить на всех хостах кроме inetRouter
 
-```bash
-echo "GATEWAY=192.168.0.1" >> /etc/sysconfig/network-scripts/ifcfg-eth1
-```
+###Отключение маршрута по умолчанию с помощью Ansible
 
-После внесения данных изменений нужно перезапустить сетевую службу: sytemctl restart network
+Для выполнения идентичных изменений с помощью Ansible, можно воспользоваться следующим блоком:
+  - name: disable default route
+    template: 
+      src: 00-installer-config.yaml
+      dest: /etc/netplan/00-installer-config.yaml
+      owner: root
+      group: root
+      mode: 0644
+    when: (ansible_hostname != "inetRouter") 
 
 #### Изменений маршрута по умолчанию с помощью Ansible
 
