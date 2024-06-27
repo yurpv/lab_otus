@@ -532,7 +532,7 @@ root@office1Server:~#
 
 Для добавления маршрута, после раздела addresses нужно добавить блок:
 
-```bash
+```
     enp0s8:
       addresses:
       - 192.168.2.130/26
@@ -543,7 +543,7 @@ root@office1Server:~#
 
 Пример файла /etc/netplan/50-vagrant.yaml
 
-```yml
+```
 ---
 network:
   version: 2
@@ -629,12 +629,11 @@ Office1Router знает сеть (192.168.2.128/26), в которой расп
 
 Установка traceroute:
 
-- CentOS 7: yum —i install traceroute
-- Debian,Ubuntu: apt install -y traceroute
+- Ubuntu: apt install -y traceroute
 
 Пример проверки выхода в Интернет через сервер inetRouter c хоста office1Server:
 
-```bash
+```
 traceroute 8.8.8.8
 
 traceroute to 8.8.8.8 (8.8.8.8), 64 hops max
