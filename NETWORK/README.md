@@ -380,7 +380,8 @@ COMMIT
 :POSTROUTING ACCEPT [34:2224]
 -A POSTROUTING ! -d 172.16.0.0/16 -o eth0 -j MASQUERADE
 COMMIT
-# Completed on Thu Jun 27 13:38:56 2024```
+# Completed on Thu Jun 27 13:38:56 2024
+```
 
 > Если просто запустить команду iptables-save, то на экране консоли появится полный список всех правил, которые действуют на текущий момент. Данная команда очень удобна для поиска проблем в iptables
 
@@ -497,9 +498,10 @@ netplan try
 
 Отключение дефолтного маршрута требуется настроить на всех хостах кроме inetRouter
 
-###Отключение маршрута по умолчанию с помощью Ansible
+### Отключение маршрута по умолчанию с помощью Ansible
 
 Для выполнения идентичных изменений с помощью Ansible, можно воспользоваться следующим блоком:
+```
   - name: disable default route
     template: 
       src: 00-installer-config.yaml
@@ -508,73 +510,31 @@ netplan try
       group: root
       mode: 0644
     when: (ansible_hostname != "inetRouter") 
-
-#### Изменений маршрута по умолчанию с помощью Ansible
-
-Для выполнения идентичных изменений с помощью Ansible, можно воспользоваться следующим блоком:
-
-```bash
-# echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0
-- name: deisable default route
-  lineinfile:
-    dest: /etc/sysconfig/network-scripts/ifcfg-eth0
-    line: DEFROUTE=no
-  when: (ansible_hostname == "centralRouter") or (ansible_hostname == "centralServer")
-
-# echo "GATEWAY=192.168.255.1" >> /etc/sysconfig/network-scripts/ifcfg-eth1
-- name: add default gateway for centralRouter
-  lineinfile:
-    dest: /etc/sysconfig/network-scripts/ifcfg-eth1
-    line: GATEWAY=192.168.255.1
-  when: (ansible_hostname == "centralRouter")
-
-# echo "GATEWAY=192.168.0.1" >> /etc/sysconfig/network-scripts/ifcfg-eth1
-- name: add default gateway for centralServer
-  lineinfile:
-    dest: /etc/sysconfig/network-scripts/ifcfg-eth1
-    line: GATEWAY=192.168.0.1
-  when: (ansible_hostname == "centralServer")
 ```
-
-> Модуль lineinfile добавляет строку в файл. Если строка уже добавлена, то второй раз она не добавится.
-
-На этом этапе, команды, указанные в Vagrant-файле закончились. Далее нам нужно настроить статическую маршрутизацию на всех серверах.
 
 #### Настройка статических маршрутов
 
 Для настройки статических маршрутов используется команда ip route. Данная команда работает в Debian-based и RHEL-based системах.
 
-Давайте рассмотрим пример настройки статического маршрута на сервере office1Server. Исходя из схемы мы видим, что трафик с данного сервера будет идти через office1Router. Office1Server и office1Router у нас соединены через сеть managers (192.168.2.128/26). В статическом маршруте нужно указывать адрес следующего хоста. Таким образом мы должны указать на сервере office1Server маршрут, в котором доступ к любым IP-адресам у нас будет происходить через адрес 192.168.2.129, который расположен на сетевом интерфейсе office1Router. Команда будет выглядеть так: ip route add 0.0.0.0/0 via 192.168.2.129
+Давайте рассмотрим пример настройки статического маршрута на сервере office1Server. Исходя из схемы мы видим, что трафик с данного сервера будет идти через office1Router. Office1Server и office1Router у нас соединены через сеть managers (192.168.2.128/26). В статическом маршруте нужно указывать адрес следующего хоста. Таким образом мы должны указать на сервере office1Server маршрут, в котором доступ к любым IP-адресам у нас будет происходить через адрес 192.168.2.129, который расположен на сетевом интерфейсе office1Router. Команда будет выглядеть так: ip route add 0.0.0.0/0 via 192.168.2.129 
 
 Посмотреть список всех маршрутов: ip route
-
-```bash
-ip r
-default via 192.168.2.129 dev enp0s8 
-default via 10.0.2.2 dev enp0s3 proto dhcp src 10.0.2.15 metric 100 
-10.0.2.0/24 dev enp0s3 proto kernel scope link src 10.0.2.15 
-10.0.2.2 dev enp0s3 proto dhcp scope link src 10.0.2.15 metric 100 
-192.168.2.128/26 dev enp0s8 proto kernel scope link src 192.168.2.130 
-192.168.50.0/24 dev enp0s19 proto kernel scope link src 192.168.50.21 
 ```
-
-Удалить маршрут: ip route del 0.0.0.0/0 via 192.168.2.129
+root@office1Server:~# ip r
+default via 10.0.2.2 dev enp0s3 proto dhcp src 10.0.2.15 metric 100 
+10.0.2.0/24 dev enp0s3 proto kernel scope link src 10.0.2.15 metric 100 
+10.0.2.2 dev enp0s3 proto dhcp scope link src 10.0.2.15 metric 100 
+10.0.2.3 dev enp0s3 proto dhcp scope link src 10.0.2.15 metric 100 
+172.16.2.128/26 dev enp0s8 proto kernel scope link src 172.16.2.130 
+172.16.50.0/24 dev enp0s19 proto kernel scope link src 172.16.50.21 
+root@office1Server:~#
+```
+  
+Удалить маршрут: ip route del 0.0.0.0/0 via 172.16.2.129 
 
 > Важно помнить, что маршруты, настроенные через команду ip route удаляются после перезагрузки или перезапуске сетевой службы.
 
 Для того, чтобы маршруты сохранялись после перезагрузки нужно их указывать непосредственно в файле конфигурации сетевого интерфейса:
-
-- В CentOS нужно создать файл route-<имя интерфейса>, например для интерфейса /etc/sysconfig/network-scripts/ifcfg-eth1 необходимо создать файл /etc/sysconfig/network-scripts/route-eth1 и указать там правила в формате: <Сеть назначения>/<маска> via \<Next hop address>
-
-Пример файла /etc/sysconfig/network-scripts/route-eth1
-
-```bash
-192.168.0.0/22 via 192.168.255.2
-192.168.255.4/30 via 192.168.255.2
-192.168.255.8/30 via 192.168.255.2
-```
-
-Применение маршрутов: service network restart
 
 - В современных версиях Ubuntu, для указания маршрута нужно поправить netplan-конфиг. Конфиги netplan хранятся в виде YAML-файлов и обычно лежат в каталоге /etc netplan В нашем стенде такой файл - /etc/netplan/50-vagrant.yaml
 
@@ -608,123 +568,62 @@ network:
       - 192.168.50.21/24
 ```
 
-> В YAML-файле очень важно следить за правильными отступами, ошибка в один пробел не даст сохранить изменения.
+В YAML-файле очень важно следить за правильными отступами, ошибка в один пробел не даст сохранить изменения.
 
-Применение изменений:
-
-```bash
-root@office1Server:~# netplan apply
+Применение изменений: 
+```
 root@office1Server:~# netplan try
-Warning: Stopping systemd-networkd.service, but it can still be activated by: systemd-networkd.socket
 Do you want to keep these settings?
+
 Press ENTER before the timeout to accept the new configuration
-Changes will revert in 118 seconds
+
+Changes will revert in 120 seconds
 Configuration accepted.
 root@office1Server:~#
 ```
 
-В Debian маршрут указывается в файле с сетевыми интерфейсами /etc/network/interfaces. Маршрут указывается после описания самого интерфейса и напоминает команду ip route: up ip route add <сеть назначения>/<маска> via \<next hop address>
-
-Также требуется удалить маршрут по умолчанию: post-up ip route del default dev eth0
-
-Пример файла /etc/network/interfaces
-
-```bash
-# interfaces(5) file used by ifup(8) and ifdown(8)
-# Generate from Ansible
-# Include files from /etc/network/interfaces.d:
-source-directory /etc/network/interfaces.d
-
-# The loopback network interface
-auto lo
-iface lo inet loopback
-
-# The primary network interface
-allow-hotplug eth0
-iface eth0 inet dhcp
-
-# delete vagrant default route
-post-up ip route del default dev eth0
-
-# The contents below are automatically generated by Ansible. Do not modify.
-auto eth1
-iface eth1 inet static
-    address 192.168.1.2
-    netmask 255.255.255.128
-
-# default route
-up ip route add 0.0.0.0/0 via 192.168.1.1
-
-# The contents below are automatically generated by Ansible. Do not modify.
-auto eth2
-iface eth2 inet static
-    address 192.168.50.31
-    netmask 255.255.255.0
-```
-
-Для применения изменений нужно перезапустить сетевую службу: systemctl restart networking
-
 При настройке интерфейсов и маршрутов в любой из ОС можно оставлять комментарии в файле. Перед комментарием должен стоять знак «#»
 
-Настроим самостоятельно остальные маршруты на серверах. Важно помнить, что помимо маршрутов по умолчанию, вам нужно будет использовать обратные маршруты.
+Настройте самостоятельно все маршруты на серверах. Важно помнить, что помимо маршрутов по умолчанию, вам нужно будет использовать обратные маршруты. 
 
-Давайте разберем пример такого маршрута: допустим мы хотим отправить команду ping с сервера office1Server (192.168.2.130) до сервера centralRouter (192.168.0.1)
+Давайте разберем пример такого маршрута: допустим мы хотим отправить команду ping с сервера office1Server (192.168.2.130) до сервера centralRouter (192.168.0.1) 
+Наш трафик пойдёт следующим образом: office1Server — office1Router — centralRouter — office1Router — office1Server
 
-Наш трафик пойдёт следующим образом: office1Server — office1Router — centralRouter — office1Router — office1Server Office1Router знает сеть (192.168.2.128/26), в которой располагается сервер office1Server, а сервер centralRouter, когда получит запрос от адреса 192.168.2.130 не будет понимать, куда отправить ответ.
+Office1Router знает сеть (192.168.2.128/26), в которой располагается сервер office1Server, а сервер centralRouter, когда получит запрос от адреса 192.168.2.130 не будет понимать, куда отправить ответ. Решением этой проблемы будет добавление обратного маршрута. 
 
-Решением этой проблемы будет добавление обратного маршрута.
+Обратный маршрут указывается также как остальные маршруты. Изучив схему мы видим, что связь между сетями 192.168.2.0/24 и 192.168.0.0/24 осуществляется через сеть 192.168.255.8/30. Также мы видим что сети office1 подключены к centralRouter через порт eth5. На основании этих данных мы можем добавить маршрут в файл /etc/netplan/50-vagrant.yaml
+```
+	eth5:
+        addresses:
+        - 192.168.255.9/30
+        routes:
+        - to: 192.168.2.0/24
+          via: 192.168.255.8
+```
 
-Обратный маршрут указывается также как остальные маршруты. Изучив схему мы видим, что связь между сетеми 192.168.2.0/24 и 192.168.0.0/24 осуществляется через сеть 192.168.255.8/30. Также мы видим что сети office1 подключены к centralRouter через порт eth5. На основании этих данных мы можем создать файл /etc/sysconfig network-scripts/route-eth5 и добавить в него маршрут 192.168.2.0/24 via 192.168.255.10
+
 
 #### Настройка маршрутов с помощью Ansible
 
-Для настройки маршрутов с помощью Ansible, нам необходимо подготовить файлы с маршрутами для всех серверов. Далее с помощью модуля template мы можем их добавлять:
-
-```bash
-    - name: set up route on office1Server
-      template:
-        src: office1Server_route.j2
-        dest: /etc/netplan/50-vagrant.yaml
-        owner: root
-        group: root
-        mode: 0644
-      when: (ansible_hostname == "office1Server")
-    - name: set up route on office2Server
-      template:
-        src: office2Server_route.j2
-        dest: /etc/network/interfaces
-        owner: root
-        group: root
-        mode: 0644
-      when: (ansible_hostname == "office2Server")
-    - name: set up route on centralRouter eth1
-      template:
-        src: centralRouter_route_eth1.j2
-        dest: /etc/sysconfig/network-scripts/route-eth1
-        owner: root
-        group: root
-        mode: 0644
-      when: (ansible_hostname == "centralRouter")
+Для настройки маршрутов с помощью Ansible, нам необходимо подготовить файлы 50-vagrant.yaml с маршрутами для всех серверов. Далее с помощью модуля template мы можем их добавлять:
 ```
+  - name: add default gateway for centralRouter
+    template: 
+      src: "50-vagrant_{{ansible_hostname}}.yaml"
+      dest: /etc/netplan/50-vagrant.yaml
+      owner: root
+      group: root
+      mode: 0644
 
-Пример конфигурационного файла office1Server_route.j2
-
-```bash
----
-network:
-  version: 2
-  renderer: networkd
-  ethernets:
-    enp0s8:
-      addresses:
-      - 192.168.2.130/26
-      routes:
-      - to: 0.0.0.0/0
-        via: 192.168.2.129
-    enp0s19:
-      addresses:
-      - 192.168.50.21/24
+  - name: restart all hosts
+    reboot:
+      reboot_timeout: 600
 ```
+    
+Для того, чтобы не писать 7 идентичных модулей, можно сделать один модуль, в котором будут перечисляться все хосты. Для этого у template-файлов должны быть идентичные имена формата 50-vagrant_<имя сервера>.yaml
+Например:
+
+После копирования файлов, для применения сетевых настроек, перезагрузим все хосты 
 
 Также модуль template позволяет использовать jinja2-шаблоны, с помощью которых файл может генериться автоматически, забирая информацию из данных о хосте (Ansible facts) и файлов переменных.
 
