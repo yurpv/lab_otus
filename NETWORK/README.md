@@ -830,7 +830,6 @@ traceroute to 8.8.8.8 (8.8.8.8), 30 hops max, 60 byte packets
 25  dns.google (8.8.8.8)  24.555 ms  23.913 ms  17.752 ms
 ```
 
-В данном примере, в первых трёх переходах мы видим что запрос идёт через сервера: office1Router — centralRouter — inetRouter
 
 Пример проверки доступности office1Server c хоста office2Server:
 
