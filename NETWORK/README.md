@@ -464,15 +464,14 @@ net.ipv4.ip_forward = 1
 
 ```
 [routers]
-inetRouter ansible_host=172.16.50.10 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/inetRouter/virtualbox/private_key
-centralRouter ansible_host=172.16.50.11 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/centralRouter/virtualbox/private_key
-office1Router ansible_host=172.16.50.20 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/office1Router/virtualbox/private_key
-office2Router ansible_host=172.16.50.30 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/office2Router/virtualbox/private_key
-
+inetRouter ansible_host=192.168.50.10 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/inetRouter/virtualbox/private_key
+centralRouter ansible_host=192.168.50.11 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/centralRouter/virtualbox/private_key
+office1Router ansible_host=192.168.50.20 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/office1Router/virtualbox/private_key
+office2Router ansible_host=192.168.50.30 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/office2Router/virtualbox/private_key
 [servers]
-centralServer ansible_host=172.16.50.12 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/inetRouter/virtualbox/private_key
-office1Server ansible_host=172.16.50.21 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/centralRouter/virtualbox/private_key
-office2Server ansible_host=172.16.50.31 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/office1Router/virtualbox/private_key
+centralServer ansible_host=192.168.50.12 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/inetRouter/virtualbox/private_key
+office1Server ansible_host=192.168.50.21 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/centralRouter/virtualbox/private_key
+office2Server ansible_host=192.168.50.31 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/office1Router/virtualbox/private_key
 ```
 
 > Файл hosts — это файл инвентаризации, в нем указан список серверов, их адреса, группы и способы доступа на сервер.
@@ -519,21 +518,22 @@ netplan try
 
 Для настройки статических маршрутов используется команда ip route. Данная команда работает в Debian-based и RHEL-based системах.
 
-Давайте рассмотрим пример настройки статического маршрута на сервере office1Server. Исходя из схемы мы видим, что трафик с данного сервера будет идти через office1Router. Office1Server и office1Router у нас соединены через сеть managers (192.168.2.128/26). В статическом маршруте нужно указывать адрес следующего хоста. Таким образом мы должны указать на сервере office1Server маршрут, в котором доступ к любым IP-адресам у нас будет происходить через адрес 192.168.2.129, который расположен на сетевом интерфейсе office1Router. Команда будет выглядеть так: ip route add 0.0.0.0/0 via 192.168.2.129 
+Давайте рассмотрим пример настройки статического маршрута на сервере office1Server. Исходя из схемы мы видим, что трафик с данного сервера будет идти через office1Router. Office1Server и office1Router у нас соединены через сеть managers (192.168.2.128/26). В статическом маршруте нужно указывать адрес следующего хоста. Таким образом мы должны указать на сервере office1Server маршрут, в котором доступ к любым IP-адресам у нас будет происходить через адрес 192.168.2.129, который расположен на сетевом интерфейсе office1Router. Команда будет выглядеть так: 
+```
+ip route add 0.0.0.0/0 via 192.168.2.129 
+```
 
 Посмотреть список всех маршрутов: ip route
 ```
 root@office1Server:~# ip r
-default via 10.0.2.2 dev enp0s3 proto dhcp src 10.0.2.15 metric 100 
-10.0.2.0/24 dev enp0s3 proto kernel scope link src 10.0.2.15 metric 100 
-10.0.2.2 dev enp0s3 proto dhcp scope link src 10.0.2.15 metric 100 
-10.0.2.3 dev enp0s3 proto dhcp scope link src 10.0.2.15 metric 100 
-172.16.2.128/26 dev enp0s8 proto kernel scope link src 172.16.2.130 
-172.16.50.0/24 dev enp0s19 proto kernel scope link src 172.16.50.21 
-root@office1Server:~#
+default via 192.168.2.129 dev eth1 proto static 
+10.0.2.0/24 dev eth0 proto kernel scope link src 10.0.2.15 metric 100 
+10.0.2.3 dev eth0 proto dhcp scope link src 10.0.2.15 metric 100 
+192.168.2.128/26 dev eth1 proto kernel scope link src 192.168.2.130 
+192.168.50.0/24 dev eth2 proto kernel scope link src 192.168.50.21 
 ```
   
-Удалить маршрут: ip route del 0.0.0.0/0 via 172.16.2.129 
+Удалить маршрут: ip route del 0.0.0.0/0 via 192.168.2.129  
 
 > Важно помнить, что маршруты, настроенные через команду ip route удаляются после перезагрузки или перезапуске сетевой службы.
 
