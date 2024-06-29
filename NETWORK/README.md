@@ -851,7 +851,7 @@ traceroute to 192.168.2.130 (192.168.2.130), 30 hops max, 60 byte packets
 
 Для того, чтобы Ansible запускался сразу после развертывания серверов командой vagrant up, в текущий Vagrantfile нужно добавить блок запуска Ansible. Данный блок рекомендуется добавить после блока разворачивания виртуальных машин:
 
-```ruby
+```
             if boxconfig[:vm_name] == "office2Server"
                 box.vm.provision "ansible" do |ansible|
                     ansible.playbook = "ansible/provision.yml"
