@@ -71,7 +71,7 @@ end
 Для того, чтобы наш клиент мог получить ip-адрес нам требуется DHCP-сервер, чтобы можно было получить
 файл pxelinux.0 нам потребуется TFTP-сервер. Утилита dnsmasq совмещает в себе сразу и DHCP и TFTP-
 сервер:
-1. отключаем firewall:
+1. Отключаем firewall:
 ```
 root@pxeserver:~# systemctl stop ufw
 root@pxeserver:~# systemctl disable ufw
@@ -79,12 +79,12 @@ Synchronizing state of ufw.service with SysV service script with /lib/systemd/sy
 Executing: /lib/systemd/systemd-sysv-install disable ufw
 ```
 
-2. обновляем кэш и устанавливаем утилиту dnsmasq
+2. Обновляем кэш и устанавливаем утилиту dnsmasq
 ```
 root@pxeserver:~# sudo apt update
 root@pxeserver:~# sudo apt install dnsmasq
 ```
-3. создаём файл /etc/dnsmasq.d/pxe.conf и добавляем в него следующее содержимое vim /etc/dnsmasq.d/pxe.conf
+3. Создаём файл /etc/dnsmasq.d/pxe.conf и добавляем в него следующее содержимое vim /etc/dnsmasq.d/pxe.conf
 
 > Указываем интерфейс в на котором будет работать DHCP/TFTP
 ```
@@ -92,7 +92,7 @@ interface=eth1
 bind-interfaces
 ```
 
->Также указаваем интерфейс и range адресов которые будут выдаваться по DHCP
+> Также указаваем интерфейс и range адресов которые будут выдаваться по DHCP
 ```
 dhcp-range=eth1,10.0.0.100,10.0.0.120
 ```
@@ -115,13 +115,13 @@ enable-tftp
 tftp-root=/srv/tftp/amd64
 ```
 
-4. создаём каталоги для файлов TFTP-сервера
+4. Создаём каталоги для файлов TFTP-сервера
 ```
 mkdir -p /srv/tftp
 ```
 
-5. скачиваем файлы для сетевой установки Ubuntu 24.04 и распаковываем их в каталог /srv/tftp
-> С Официальной директории у меня не получилось полностью загрузить данные, использоваел зеркало яндекса 
+5. Скачиваем файлы для сетевой установки Ubuntu 24.04 и распаковываем их в каталог /srv/tftp
+> С Официальной директории у меня не получилось полностью загрузить данные, использоваел зеркало яндекса </br>
 wget https://mirror.yandex.ru/ubuntu-releases/noble/ubuntu-24.04-netboot-amd64.tar.gz
 tar -xzvf ubuntu-24.04-netboot-amd64.tar.gz -C /srv/tftp
 
@@ -147,41 +147,82 @@ drwxr-xr-x 2 root root     4096 Apr 23 09:46 pxelinux.cfg
 root@pxeserver:~# systemctl restart dnsmasq
 
 ### Настройка Web-сервера
+
 Для того, чтобы отдавать файлы по HTTP нам потребуется настроенный веб-сервер.
-1) устанавливаем Web-сервер apache2
-sudo apt install apache22) создаём каталог /srv/images в котором будут храниться iso-образы для установки по сети
-mkdir /srv/images
-3) переходим в каталог /srv/images и скачиваем iso-образ ubuntu 24.04
-cd /srv/images
-wget http://cdimage.ubuntu.com/ubuntu-server/daily-live/current/noble-live-server-amd64.iso
-4) создаём файл /etc/apache2/sites-available/ks-server.conf и добавлем в него следующее содержимое
-vim /etc/apache2/sites-available/ks-server.conf
-#Указываем IP-адрес хоста и порт на котором будет работать Web-сервер
+1. Устанавливаем Web-сервер apache2
+```
+root@pxeserver:~# apt install apache2
+root@pxeserver:~# systemctl status apache2
+● apache2.service - The Apache HTTP Server
+     Loaded: loaded (/lib/systemd/system/apache2.service; enabled; vendor preset: enabled)
+     Active: active (running) since Mon 2024-07-01 22:19:37 UTC; 8h ago
+       Docs: https://httpd.apache.org/docs/2.4/
+   Main PID: 13229 (apache2)
+      Tasks: 55 (limit: 1011)
+     Memory: 4.9M
+        CPU: 1.469s
+     CGroup: /system.slice/apache2.service
+             ├─13229 /usr/sbin/apache2 -k start
+             ├─13230 /usr/sbin/apache2 -k start
+             └─13231 /usr/sbin/apache2 -k start
+```
+
+2. Создаём каталог /srv/images в котором будут храниться iso-образы для установки по сети:
+```
+root@pxeserver:~# mkdir /srv/images
+```
+
+3. Переходим в каталог /srv/images и скачиваем iso-образ ubuntu 24.04
+```
+root@pxeserver:~# cd /srv/images
+root@pxeserver:~# wget https://mirror.yandex.ru/ubuntu-releases/noble/ubuntu-24.04-live-server-amd64.iso
+```
+
+4. Создаём файл /etc/apache2/sites-available/ks-server.conf и добавлем в него следующее содержимое
+```
+root@pxeserver:~# vi /etc/apache2/sites-available/ks-server.conf
+```
+
+> Указываем IP-адрес хоста и порт на котором будет работать Web-сервер
+```
 <VirtualHost 10.0.0.20:80>
 DocumentRoot /
-# Указываем директорию /srv/images из которой будет загружаться iso-образ
+```
+
+> Указываем директорию /srv/images из которой будет загружаться iso-образ
+```
 <Directory /srv/images>
 Options Indexes MultiViews
 AllowOverride All
 Require all granted
 </Directory>
 </VirtualHost>
-5) активируем конфигурацию ks-server в apache
-sudo a2ensite ks-server.conf
-6) вносим изменения в файл /srv/tftp/amd64/pxelinux.cfg/default
-vim /srv/tftp/amd64/pxelinux.cfg/default
+```
+
+5. Активируем конфигурацию ks-server в apache
+```
+root@pxeserver:~# a2ensite ks-server.conf
+```
+
+6. Вносим изменения в файл /srv/tftp/amd64/pxelinux.cfg/default
+```
+root@pxeserver:~# vi /srv/tftp/amd64/pxelinux.cfg/default
 DEFAULT install
 LABEL install
 KERNEL linux
 INITRD initrd
-APPEND root=/dev/ram0 ramdisk_size=3000000 ip=dhcp iso-url=http://10.0.0.20/srv/images/noble-live-server-
-amd64.iso autoinstall
-В данном файле мы указываем что файлы linux и initrd будут забираться по tftp, а сам iso-образ ubuntu 24.04
-будет скачиваться из нашего веб-сервера http://10.0.0.20/srv/images/noble-live-server-amd64.iso
+APPEND root=/dev/ram0 ramdisk_size=3000000 ip=dhcp iso-url=http://10.0.0.20/srv/images/ubuntu-24.04-live-server-amd64.iso autoinstall
+```
+> В данном файле мы указываем что файлы linux и initrd будут забираться по tftp, а сам iso-образ ubuntu 24.04
+будет скачиваться из нашего веб-сервера http://10.0.0.20/srv/images/ubuntu-24.04-live-server-amd64.iso
 Из-за того, что образ достаточно большой (2.6G) и он сначала загружается в ОЗУ, необходимо указать
 размер ОЗУ до 3 гигабайт (root=/dev/ram0 ramdisk_size=3000000)
-7) перезагружаем web-сервер apache
-systemctl restart apache2
+
+7. Перезагружаем web-сервер apache
+```
+root@pxeserver:~# systemctl restart apache2
+```
+
 На этом настройка Web-сервера завершена и на данный момент, если мы запустим ВМ pxeclient, то увидим
 загрузку по PXE
 и далее увидим загрузку iso-образа
@@ -190,11 +231,17 @@ systemctl restart apache2
 В данной ситуации поможет перезапуск виртуальной машины с помощью VirtualBox, либо её удаление и
 повторная инициализация с помощью команды vagrant up
 
-3. Настройка автоматической установки Ubuntu 24.04
+### Настройка автоматической установки Ubuntu 24.04
+
 Осталось автоматизировать установку ubuntu 24 (чтобы не пользоваться мастером установки вручную)
-1) cоздаём каталог для файлов с автоматической установкой
-mkdir /srv/ks
-2) создаём файл /srv/ks/user-data и добавляем в него следующее содержимоеvim /srv/ks/user-data
+1. Создаём каталог для файлов с автоматической установкой
+```
+root@pxeserver:~# mkdir /srv/ks
+```
+
+2. Создаём файл /srv/ks/user-data и добавляем в него следующее содержимоеvim /srv/ks/user-data
+```
+root@pxeserver:~# vi /srv/ks/user-data
 #cloud-config
 autoinstall:
 apt:
@@ -237,20 +284,28 @@ authorized-keys: []
 install-server: true
 updates: security
 version: 1
-В данном файле указываются следующие настройки:
-• устанавливается apt-репозиторий http://us.archive.ubuntu.com/ubuntu
-• отключена автоматическая загрузка драйверов
-• задаётся hostname linux
-• создаётся пользователь otus c паролем 123 (пароль зашифрован в SHA512)
-• использование английской раскладки
-• добавлена настройка получения адресов по DHCP (для обоих портов)
-• устанавливается openssh-сервер с доступом по логину и паролю
-• и т д.3) создаём файл с метаданными /srv/ks/meta-data
-touch /srv/ks/meta-data
-Файл с метаданными хранит дополнительную информацию о хосте, в нашей методичке мы не будем
+```
+
+> В данном файле указываются следующие настройки:</br>
+• устанавливается apt-репозиторий http://us.archive.ubuntu.com/ubuntu</br>
+• отключена автоматическая загрузка драйверов</br>
+• задаётся hostname linux</br>
+• создаётся пользователь otus c паролем 123 (пароль зашифрован в SHA512)</br>
+• использование английской раскладки</br>
+• добавлена настройка получения адресов по DHCP (для обоих портов)</br>
+• устанавливается openssh-сервер с доступом по логину и паролю</br>
+• и т д.
+
+3. создаём файл с метаданными /srv/ks/meta-data</br>
+```
+root@pxeserver:~#  touch /srv/ks/meta-data
+```
+> Файл с метаданными хранит дополнительную информацию о хосте, в нашей методичке мы не будем
 добавлять дополнительную информацю
-4) в конфигурации веб-сервера добавим каталог /srv/ks идёнтично каталогу /srv/images
-cat /etc/apache2/sites-available/ks-server.conf
+
+4. В конфигурации веб-сервера добавим каталог /srv/ks идёнтично каталогу /srv/images
+```
+root@pxeserver:~# vi /etc/apache2/sites-available/ks-server.conf
 <VirtualHost 10.0.0.20:80>
 DocumentRoot /
 <Directory /srv/ks>
@@ -263,16 +318,19 @@ Options Indexes MultiViews
 AllowOverride All
 Require all granted
 </Directory>
-5) в файле /srv/tftp/amd64/pxelinux.cfg/default добавляем параметры автоматической установки
-(отмечены полужирным)
+```
+
+5. В файле /srv/tftp/amd64/pxelinux.cfg/default добавляем параметры автоматической установки
+```
 vim /srv/tftp/amd64/pxelinux.cfg/default
 DEFAULT install
 LABEL install
 KERNEL linux
 INITRD initrd
-APPEND root=/dev/ram0 ramdisk_size=3000000 ip=dhcp iso-url=http://10.0.0.20/srv/images/noble-live-server-
-amd64.iso autoinstall ds=nocloud-net;s=http://10.0.0.20/srv/ks/
-6) перезапускаем службы dnsmasq и apache2
+APPEND root=/dev/ram0 ramdisk_size=3000000 ip=dhcp iso-url=http://10.0.0.20/srv/images/ubuntu-24.04-live-server-amd64.iso autoinstall ds=nocloud-net;s=http://10.0.0.20/srv/ks/
+```
+
+6. Перезапускаем службы dnsmasq и apache2
 systemctl restart dnsmasq
 systemctl restart apache2
 
@@ -282,8 +340,6 @@ systemctl restart apache2
 На этом настройка автоматической установки завершена
 
 ![image](https://github.com/yurpv/lab_otus/assets/162872411/b8ec47cd-1ee9-4282-b340-2ba037b01d31)
-
-![image](https://github.com/yurpv/lab_otus/assets/162872411/3c0ab7fe-ca4a-48c3-a592-83ac752a49a3)
 
 ![image](https://github.com/yurpv/lab_otus/assets/162872411/118b24f4-9940-45e4-82b7-b7d2f14a4c0f)
 
