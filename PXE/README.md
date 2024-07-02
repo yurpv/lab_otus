@@ -331,10 +331,15 @@ APPEND root=/dev/ram0 ramdisk_size=3000000 ip=dhcp iso-url=http://10.0.0.20/srv/
 ```
 
 6. Перезапускаем службы dnsmasq и apache2
-systemctl restart dnsmasq
-systemctl restart apache2
+```
+root@pxeserver:~#  systemctl restart dnsmasq
+root@pxeserver:~#  systemctl restart apache2
+```
 
 На этом настройка автоматической установки завершена. Теперь можно перезапустить ВМ pxeclient
+```
+root@pxeserver:~# vagrant up pxeclient
+```
 и мы должны увидеть автоматическую установку
 После успешной установки выключаем ВМ и в её настройках ставим запуск ВМ из диска Далее, после запуска нашей ВМ мы сможем залогиниться под пользователем otus
 На этом настройка автоматической установки завершена
