@@ -85,10 +85,12 @@ root@pxeserver:~# sudo apt update
 root@pxeserver:~# sudo apt install dnsmasq
 ```
 3. создаём файл /etc/dnsmasq.d/pxe.conf и добавляем в него следующее содержимое vim /etc/dnsmasq.d/pxe.conf
+
 > Указываем интерфейс в на котором будет работать DHCP/TFTP
 ```
 interface=eth1
 bind-interfaces
+```
 
 >Также указаваем интерфейс и range адресов которые будут выдаваться по DHCP
 ```
