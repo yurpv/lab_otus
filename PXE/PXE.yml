@@ -1,0 +1,84 @@
+---
+- name: Configure host
+  hosts: all
+  become: yes
+  become_user: root
+  tasks:
+    - name: Update host
+      apt:
+        update_cache: yes
+
+    - name: Disable the ufw firewall.
+      service:
+        name: ufw
+        state: stopped
+        enabled: false
+
+    - name: Install dnsmasq
+      apt:
+        name: dnsmasq
+
+    - name: install apache2
+      apt:
+        name: apache2
+        update_cache: yes
+        state: latest
+
+    - name: Set up virtuahHost
+      template:
+        src: templates/ks-server.conf
+        dest: /etc/apache2/sites-available/ks-server.conf
+
+    - name: Enable site
+      shell: |
+        sudo a2ensite ks-server.conf
+        systemctl restart dnsmasq
+        systemctl restart apache2
+
+
+    - name: Create TFTP, images, ks directory
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - /srv/images
+        - /srv/tftp
+        - /srv/ks
+
+    - name: Download netboot
+      get_url:
+        url: https://mirror.yandex.ru/ubuntu-releases/noble/ubuntu-24.04-netboot-amd64.tar.gz
+        dest: /srv/tftp/ubuntu-24.04-netboot-amd64.tar.gz
+        mode: '0775'
+
+    - name: Extract ubuntu-24.04-netboot-amd64.tar.gz
+      unarchive:
+        src: /srv/tftp/ubuntu-24.04-netboot-amd64.tar.gz
+        dest: /srv/tftp
+        remote_src: yes
+
+    - name: Download ISO
+      get_url:
+        url: https://mirror.yandex.ru/ubuntu-releases/noble/ubuntu-24.04-live-server-amd64.iso
+        dest: /srv/images/ubuntu-24.04-live-server-amd64.iso
+        mode: '0775'
+
+    - name: Copy user-data file
+      template:
+        src: templates/user-data
+        dest: /srv/ks/user-data
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: Touch the same file
+      file:
+        path: /srv/ks/meta-data
+        state: touch
+        mode: u+rw,g-wx,o-rwx
+
+    - name: Enable site and restart service
+      shell: |
+        sudo a2ensite ks-server.conf
+        systemctl restart dnsmasq
+        systemctl restart apache2
