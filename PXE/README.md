@@ -63,58 +63,88 @@ Vagrant.configure("2") do |config|
 end
 ```
 
-В методичке будет указано только как настроить PXE Server через терминал, настройка с помощью
-Ansible выполняется студентом самостоятельно.
-После внесения всех изменений запускаем наш стенд с помощью команды vagrant up
-Вся настройка будет происходить от root пользователя. Для того, чтобы зайти в root пользователя используем
-команду sudo -i
+> В методичке будет указано только как настроить PXE Server через терминал, настройка с помощью Ansible выполняется студентом самостоятельно. </br>
+После внесения всех изменений запускаем наш стенд с помощью команды vagrant up. </br>
+Вся настройка будет происходить от root пользователя. Для того, чтобы зайти в root пользователя используем команду sudo -i
 
 1. Настройка DHCP и TFTP-сервера
 Для того, чтобы наш клиент мог получить ip-адрес нам требуется DHCP-сервер, чтобы можно было получить
 файл pxelinux.0 нам потребуется TFTP-сервер. Утилита dnsmasq совмещает в себе сразу и DHCP и TFTP-
-сервер.
-1) отключаем firewall:
-systemctl stop ufw
-systemctl disable ufw
-2) обновляем кэш и устанавливаем утилиту dnsmasq
-sudo apt update
-sudo apt install dnsmasq
-3) создаём файл /etc/dnsmasq.d/pxe.conf и добавляем в него следующее содержимое
-vim /etc/dnsmasq.d/pxe.conf#Указываем интерфейс в на котором будет работать DHCP/TFTP
+сервер:
+1. отключаем firewall:
+```
+root@pxeserver:~# systemctl stop ufw
+root@pxeserver:~# systemctl disable ufw
+Synchronizing state of ufw.service with SysV service script with /lib/systemd/systemd-sysv-install.
+Executing: /lib/systemd/systemd-sysv-install disable ufw
+```
+
+2. обновляем кэш и устанавливаем утилиту dnsmasq
+```
+root@pxeserver:~# sudo apt update
+root@pxeserver:~# sudo apt install dnsmasq
+```
+3. создаём файл /etc/dnsmasq.d/pxe.conf и добавляем в него следующее содержимое vim /etc/dnsmasq.d/pxe.conf
+> Указываем интерфейс в на котором будет работать DHCP/TFTP
+```
 interface=eth1
 bind-interfaces
-#Также указаваем интерфейс и range адресов которые будут выдаваться по DHCP
+
+>Также указаваем интерфейс и range адресов которые будут выдаваться по DHCP
+```
 dhcp-range=eth1,10.0.0.100,10.0.0.120
-#Имя файла, с которого надо начинать загрузку для Legacy boot (этот пример рассматривается в методичке)
+```
+
+> Имя файла, с которого надо начинать загрузку для Legacy boot (этот пример рассматривается в методичке)
+```
 dhcp-boot=pxelinux.0
-#Имена файлов, для UEFI-загрузки (не обязательно добавлять)
+```
+
+> Имена файлов, для UEFI-загрузки (не обязательно добавлять)
+```
 dhcp-match=set:efi-x86_64,option:client-arch,7
 dhcp-boot=tag:efi-x86_64,bootx64.efi
 #Включаем TFTP-сервер
 enable-tftp
-#Указываем каталог для TFTP-сервера
-tftp-root=/srv/tftp/amd64
-4) создаём каталоги для файлов TFTP-сервера
-mkdir -p /srv/tftp
-5) скачиваем файлы для сетевой установки Ubuntu 24.04 и распаковываем их в каталог /srv/tftp
-wget http://cdimage.ubuntu.com/ubuntu-server/daily-live/current/noble-netboot-amd64.tar.gz
-tar -xzvf noble-netboot-amd64.tar.gz -C /srv/tftp
-по итогу, в каталоге /srv/tftp/amd64 мы увидем вот такие файлы:
-├── bootx64.efi
-├── grub
-│ └── grub.cfg
-├── grubx64.efi
-├── initrd
-├── ldlinux.c32
-├── linux
-├── pxelinux.0
-└── pxelinux.cfg
-└── default
-2 directories, 8 files
-6) перезапускаем службу dnsmasq
-systemctl restart dnsmasq
+```
 
-2. Настройка Web-сервера
+> Указываем каталог для TFTP-сервера
+```
+tftp-root=/srv/tftp/amd64
+```
+
+4. создаём каталоги для файлов TFTP-сервера
+```
+mkdir -p /srv/tftp
+```
+
+5. скачиваем файлы для сетевой установки Ubuntu 24.04 и распаковываем их в каталог /srv/tftp
+> С Официальной директории у меня не получилось полностью загрузить данные, использоваел зеркало яндекса 
+wget https://mirror.yandex.ru/ubuntu-releases/noble/ubuntu-24.04-netboot-amd64.tar.gz
+tar -xzvf ubuntu-24.04-netboot-amd64.tar.gz -C /srv/tftp
+
+
+по итогу, в каталоге /srv/tftp/amd64 мы увидем вот такие файлы:
+root@pxeserver:~# ls -la /srv/tftp/amd64
+```
+total 85268
+drwxr-xr-x 4 root root     4096 Apr 23 09:46 .
+drwxr-xr-x 3 root root     4096 Apr 23 09:46 ..
+-rw-r--r-- 1 root root   966664 Apr  4 12:39 bootx64.efi
+drwxr-xr-x 2 root root     4096 Apr 23 09:46 grub
+-rw-r--r-- 1 root root  2340744 Apr  4 10:24 grubx64.efi
+-rw-r--r-- 1 root root 68889068 Apr 23 09:46 initrd
+-rw-r--r-- 1 root root   118676 Apr  8 16:20 ldlinux.c32
+-rw-r--r-- 1 root root 14928264 Apr 23 09:46 linux
+-rw-r--r-- 1 root root    42392 Apr  8 16:20 pxelinux.0
+drwxr-xr-x 2 root root     4096 Apr 23 09:46 pxelinux.cfg
+2 directories, 8 files
+```
+
+6. Перезапускаем службу dnsmasq
+root@pxeserver:~# systemctl restart dnsmasq
+
+### Настройка Web-сервера
 Для того, чтобы отдавать файлы по HTTP нам потребуется настроенный веб-сервер.
 1) устанавливаем Web-сервер apache2
 sudo apt install apache22) создаём каталог /srv/images в котором будут храниться iso-образы для установки по сети
