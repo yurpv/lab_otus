@@ -16,3 +16,5 @@
 5. Пробросить 80й порт на inetRouter2 8080.
 6. Дефолт в инет оставить через inetRouter
 
+# Выполнения домашнего задания
+Для выполения лабораторной работы за основу взял Vagrantfile из домашнего задания Network, удалил office1Router, office1Router, office1Server, office2Server и добавил inetRouter2
