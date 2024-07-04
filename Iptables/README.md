@@ -160,6 +160,7 @@ sudo iptables -t nat -A POSTROUTING --destination 192.168.0.2/32 -j SNAT --to-so
 Дополнительная информация:
 
 Все гостевые машины по умолчанию ходят в интернет через 192.168.255.1 (inetRouter), для этого сделаны настройки (на примере centralServer):
+```
 cat /etc/netplan/00-installer-config.yaml
 # This is the network config written by 'subiquity'
 network:
@@ -187,4 +188,5 @@ network:
     eth2:
       addresses:
       - 192.168.50.10/24
+```
 Т.е. мы выключаем маршрут по умолчанию для интерфейса eth1 и прописываем шлюз по умолчанию для другого интерфейса, который смотрит в centralRouter. (более подробная информация содержится в ansible-playbook файле)
