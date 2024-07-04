@@ -141,3 +141,50 @@ vagrant@inetRouter:~$
 При выполнении пунктов 2-5 выполняется установка nginx на centralServer, с помощью правил, указанных в файле iptables_inetrouter2.rules, на inetRouter2 добавляются правила, пробрасывающие порт 80 на inetRouter2 8080
 
 Дефолт в инет оставлен через inetRouter.
+
+Добавить inetRouter2, который виден(маршрутизируется (host-only тип сети для виртуалки)) с хоста или форвардится порт через локалхост
+Добавлен в вагрант директивой box.vm.network "forwarded_port", guest: 8080, host: 1234, host_ip: "127.0.0.1", id: "nginx" (смотрите ansible-playbook файл)
+
+запустить nginx на centralServer
+Добавлено директивами: sudo apt install -y nginx; sudo systemctl enable nginx; sudo systemctl start nginx (смотрите ansible-playbook файл)
+
+Пробросить 80й порт на inetRouter2 8080
+В данном случае когда мы переходим по адресу 127.0.0.1 порт 1234 то мы попадаем на порт 8080 гостевой машины inetRouter2. Затем правилами iptables мы управляем пакетами, которые пришли на порт 8080 интерфейса eth0 и отправляем их по адресу 192.168.0.2 порт 80. Исходя из правил маршрутизации компьютер знает куда отправлять дальше данные пакеты, и он их отправляет на 192.168.255.3 (centralRouter), далее они попадают на веб-сервер 192.168.0.2 на порт 80 после чего возвращаются отправителю обратно в той же последовательности. (смотрите схему)
+
+Правила iptables для inetRouter2:
+
+sudo iptables -t nat -A PREROUTING -i eth0 -p tcp -m tcp --dport 8080 -j DNAT --to-destination 192.168.0.2:80
+sudo iptables -t nat -A POSTROUTING --destination 192.168.0.2/32 -j SNAT --to-source 192.168.255.2
+Стоит учесть при работе с iptables, что маскарадинг работает медленнее чем SNAT (обратитесь к документации).
+
+Дополнительная информация:
+
+Все гостевые машины по умолчанию ходят в интернет через 192.168.255.1 (inetRouter), для этого сделаны настройки (на примере centralServer):
+cat /etc/netplan/00-installer-config.yaml
+# This is the network config written by 'subiquity'
+network:
+  ethernets:
+    enp0s3:
+      dhcp4: true
+      dhcp4-overrides:
+          use-routes: false
+      dhcp6: false
+  version: 2
+root@inetRouter:~# cat /etc/netplan/50-vagrant.yaml 
+---
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth1:
+      addresses:
+      - 192.168.255.1/30
+      routes:
+      - to: default
+        via: 192.168.255.1
+      - to: 192.168.0.0/16
+        via: 192.168.255.2
+    eth2:
+      addresses:
+      - 192.168.50.10/24
+Т.е. мы выключаем маршрут по умолчанию для интерфейса eth1 и прописываем шлюз по умолчанию для другого интерфейса, который смотрит в centralRouter. (более подробная информация содержится в ansible-playbook файле)
