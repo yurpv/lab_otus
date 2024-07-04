@@ -129,3 +129,11 @@ ssh: connect to host 192.168.255.1 port 22: Connection refused
 ```
 root@centralServer:~# knock 192.168.255.1 2222 3333 4444
 ```
+
+- Затем, в течение 30 секунд можно будет покдлючиться по ssh с centralRouter на inetRouter
+```
+root@centralServer:~# ssh vagrant@192.168.255.1
+vagrant@192.168.255.1's password: 
+Last login: Thu Jul  4 04:53:32 2024 from 192.168.0.2
+vagrant@inetRouter:~$ 
+```
