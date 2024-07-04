@@ -137,3 +137,7 @@ vagrant@192.168.255.1's password:
 Last login: Thu Jul  4 04:53:32 2024 from 192.168.0.2
 vagrant@inetRouter:~$ 
 ```
+
+При выполнении пунктов 2-5 выполняется установка nginx на centralServer, с помощью правил, указанных в файле iptables_inetrouter2.rules, на inetRouter2 добавляются правила, пробрасывающие порт 80 на inetRouter2 8080
+
+Дефолт в инет оставлен через inetRouter.
