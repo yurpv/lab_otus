@@ -492,29 +492,39 @@ Jul 10 06:39:56 router1 systemd[1]: Started FRRouting.
 - попробуем сделать ping до ip-адреса 192.168.30.1
 
 ```
-ping 192.168.30.1
+root@router1:~# ping 192.168.30.1
+PING 192.168.30.1 (192.168.30.1) 56(84) bytes of data.
+64 bytes from 192.168.30.1: icmp_seq=1 ttl=63 time=0.276 ms
+64 bytes from 192.168.30.1: icmp_seq=2 ttl=63 time=0.683 ms
+64 bytes from 192.168.30.1: icmp_seq=3 ttl=63 time=0.774 ms
+64 bytes from 192.168.30.1: icmp_seq=4 ttl=63 time=0.682 ms
+^C
+--- 192.168.30.1 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3099ms
+rtt min/avg/max/mdev = 0.276/0.603/0.774/0.192 ms
+root@router1:~# 
 ```
-
-![2024-02-29_09-14-25](https://github.com/dimkaspaun/OSPF/assets/156161074/baddb5a3-f898-4962-a14c-6104968ddacb)
-
 
 - Запустим трассировку до адреса 192.168.30.1
 
 ```
-traceroute 192.168.30.1
+root@router1:~# traceroute 192.168.30.1
+traceroute to 192.168.30.1 (192.168.30.1), 30 hops max, 60 byte packets
+1  192.168.30.1 (192.168.30.1)  0.190 ms  0.179 ms  0.169 ms
 ```
-
-![2024-02-29_09-14-54](https://github.com/dimkaspaun/OSPF/assets/156161074/104eaf0b-0cea-4e29-9f42-42785f4ba152)
-
 
 Попробуем отключить интерфейс enp0s9 и немного подождем и снова запустим трассировку до ip-адреса 192.168.30.1
 
 ```
 ifconfig enp0s9 down
 
-ip a | grep enp0s9
+root@router1:~# ip a | grep enp0s9
+4: enp0s9: <BROADCAST,MULTICAST> mtu 1500 qdisc fq_codel state DOWN group default qlen 1000
 
-traceroute 192.168.30.1
+root@router1:~# traceroute 192.168.30.1
+traceroute to 192.168.30.1 (192.168.30.1), 30 hops max, 60 byte packets
+ 1  _gateway (10.0.2.2)  0.322 ms  0.256 ms  0.550 ms
+ 2  192.168.30.1 (192.168.30.1)  0.328 ms  0.205 ms  0.162 ms
 ```
 
 ![2024-02-29_09-16-12](https://github.com/dimkaspaun/OSPF/assets/156161074/b8443f28-cf21-46d6-8b78-96906eb2d2e1)
