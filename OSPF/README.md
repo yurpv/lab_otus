@@ -423,11 +423,13 @@ default-information originate always
 - у группы только на чтение
 
 ```
-ls -l /etc/frr
+root@router1:~# ls -l /etc/frr
+total 24
+-rw-r----- 1 frr frr 4138 Jun 11 16:04 daemons
+-rw-r----- 1 frr frr 1939 Jul 10 06:38 frr.conf
+-rw-r----- 1 frr frr 6663 Jun 11 16:04 support_bundle_commands.conf
+-rw-r----- 1 frr frr   32 Jun 11 16:04 vtysh.conf
 ```
-
-![2024-02-28_16-53-25](https://github.com/dimkaspaun/OSPF/assets/156161074/fdc35576-97d2-4aab-ae71-5f0726e8c32d)
-
 
 Если права или владелец файла указан неправильно, то нужно поменять владельца и назначить правильные права, например:
 
@@ -476,7 +478,6 @@ Jul 10 06:39:56 router1 systemd[1]: Started FRRouting.
 ```
 
 
-
 Если мы правильно настроили OSPF, то с любого хоста нам должны быть доступны сети:
 
 - 192.168.10.0/24
@@ -490,7 +491,7 @@ Jul 10 06:39:56 router1 systemd[1]: Started FRRouting.
 
 - попробуем сделать ping до ip-адреса 192.168.30.1
 
-```bash
+```
 ping 192.168.30.1
 ```
 
@@ -499,7 +500,7 @@ ping 192.168.30.1
 
 - Запустим трассировку до адреса 192.168.30.1
 
-```bash
+```
 traceroute 192.168.30.1
 ```
 
@@ -508,7 +509,7 @@ traceroute 192.168.30.1
 
 Попробуем отключить интерфейс enp0s9 и немного подождем и снова запустим трассировку до ip-адреса 192.168.30.1
 
-```bash
+```
 ifconfig enp0s9 down
 
 ip a | grep enp0s9
@@ -522,7 +523,7 @@ traceroute 192.168.30.1
 
 Также мы можем проверить из интерфейса vtysh какие маршруты мы видим на данный момент:
 
-```bash
+```
 vtysh
 
 Hello, this is FRRouting (version 8.2.2).
@@ -546,13 +547,13 @@ O>* 192.168.30.0/24 [110/300] via 10.0.10.2, enp0s8, weight 1, 00:03:29
 
 - Включим интерфейс обратно
 
-```bash
+```
 ifconfig enp0s9 up
 ```
 
 Настройка OSPF c помощью Ansible:
 
-```yml
+```
     # Отключаем UFW и удаляем его из автозагрузки
     - name: disable ufw service
       service:
@@ -617,7 +618,7 @@ ifconfig enp0s9 up
 
 Посмотреть, какую информацию о сервере собрал Ansible можно с помощью команды:
 
-```bash
+```
 ansible router1 -i ansible/hosts -m setup -e "host_key_checking=false"
 ```
 
@@ -641,7 +642,7 @@ ansible_hostname - заберет из фактов имя хостов и по�
 
 Значение router_id мы можем задать в файле hosts, дописав его в конец строки наших хостов:
 
-```bash
+```
 [routers]
 router1 ansible_host=192.168.50.10 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/router1/virtualbox/private_key router_id=1.1.1.1
 router2 ansible_host=192.168.50.11 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/router2/virtualbox/private_key router_id=2.2.2.2
@@ -650,7 +651,7 @@ router3 ansible_host=192.168.50.12 ansible_user=vagrant ansible_ssh_private_key_
 
 В темплейте файла frr.conf укажем следующее условие:
 
-```bash
+```
 {% if router_id_enable == false %}!{% endif %}router-id {{ router_id }}
 ```
 
@@ -664,7 +665,7 @@ router3 ansible_host=192.168.50.12 ansible_user=vagrant ansible_ssh_private_key_
 
 Далее, выбираем один из роутеров, на котором изменим «стоимость интерфейса». Например поменяем стоимость интерфейса enp0s8 на router1:
 
-```bash
+```
 vtysh
 
 Hello, this is FRRouting (version 8.2.2).
@@ -694,7 +695,7 @@ O>* 192.168.30.0/24 [110/200] via 10.0.12.2, enp0s9, weight 1, 00:02:59
 
 На router2
 
-```bash
+```
 vtysh
 
 Hello, this is FRRouting (version 8.2.2).
@@ -724,7 +725,7 @@ O>* 192.168.30.0/24 [110/200] via 10.0.11.1, enp0s9, weight 1, 00:03:58
 - На router1 запускаем пинг от 192.168.10.1 до 192.168.20.1: ping -I 192.168.10.1 192.168.20.1
 - На router2 запускаем tcpdump, который будет смотреть трафик только на порту enp0s9:
 
-```bash
+```
 tcpdump -i enp0s9
 
 23:17:23.793254 IP 192.168.10.1 > router2: ICMP echo request, id 8, seq 51, length 64
@@ -742,7 +743,7 @@ tcpdump -i enp0s9
 
 На router2 запускаем tcpdump, который будет смотреть трафик только на порту enp0s8:
 
-```bash
+```
 tcpdump -i enp0s8
 
 23:19:13.594894 IP router2 > 192.168.10.1: ICMP echo reply, id 8, seq 159, length 64
@@ -763,7 +764,7 @@ tcpdump -i enp0s8
 
 Настройка ассиметричного роутинга с помощью Ansible
 
-```yml
+```
     # Отключаем запрет ассиметричного роутинга
     - name: set up asynchronous routing
       sysctl:
@@ -788,7 +789,7 @@ tcpdump -i enp0s8
 
 Пример добавления «дорогого» интерфейса в template frr.conf
 
-```bash
+```
 {% if ansible_hostname == 'router1' %}
   ip ospf cost 1000
 {% else %}
@@ -806,7 +807,7 @@ tcpdump -i enp0s8
 
 Поменяем стоимость интерфейса enp0s8 на router2:
 
-```bash
+```
 vtysh
 
 Hello, this is FRRouting (version 8.2.2).
@@ -844,7 +845,7 @@ exit
 - На router1 запускаем пинг от 192.168.10.1 до 192.168.20.1: ping -I 192.168.10.1 192.168.20.1
 - На router2 запускаем tcpdump, который будет смотреть трафик только на порту enp0s9:
 
-```bash
+```
 tcpdump -i enp0s9
 
 
@@ -880,7 +881,7 @@ symmetric_routing: false
 
 Далее в template frr.conf добавим условие:
 
-```bash
+```
 {% if ansible_hostname == 'router1' %}
   ip ospf cost 1000
 {% elif ansible_hostname == 'router2' and symmetric_routing == true %}
@@ -898,7 +899,7 @@ symmetric_routing: false
 
 Для удобного переключения параметров нам потребуется запускать из ansible-playbook только 2 последних модуля. Чтобы не ждать выполнения всего плейбука, можно добавить тег к модулям:
 
-```bash
+```
     - name: set up OSPF
       template:
         src: frr.conf.j2
@@ -919,6 +920,6 @@ symmetric_routing: false
 
 Тогда можно будет запускать playbook не полностью. Пример запуска модулей из ansible-playbook, которые помечены тегами:
 
-```bash
+```
 ansible-playbook -i ansible/hosts -l all ansible/provision.yml -t setup_ospf -e "host_key_checking=false"
 ```
