@@ -527,23 +527,21 @@ traceroute to 192.168.30.1 (192.168.30.1), 30 hops max, 60 byte packets
  2  192.168.30.1 (192.168.30.1)  0.328 ms  0.205 ms  0.162 ms
 ```
 
-![2024-02-29_09-16-12](https://github.com/dimkaspaun/OSPF/assets/156161074/b8443f28-cf21-46d6-8b78-96906eb2d2e1)
-
 Как мы видим, после отключения интерфейса сеть 192.168.30.0/24 нам остаётся доступна.
 
 Также мы можем проверить из интерфейса vtysh какие маршруты мы видим на данный момент:
 
 ```
-vtysh
+root@router1:~# vtysh
 
-Hello, this is FRRouting (version 8.2.2).
+Hello, this is FRRouting (version 10.0.1).
 Copyright 1996-2005 Kunihiro Ishiguro, et al.
 
-show ip route ospf
-Codes: K - kernel route, C - connected, S - static, R - RIP,
-       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+router1# show ip route ospf
+Codes: K - kernel route, C - connected, L - local, S - static,
+       R - RIP, O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
        T - Table, v - VNC, V - VNC-Direct, A - Babel, F - PBR,
-       f - OpenFabric,
+       f - OpenFabric, t - Table-Direct,
        > - selected route, * - FIB route, q - queued, r - rejected, b - backup
        t - trapped, o - offload failure
 
@@ -618,7 +616,7 @@ ifconfig enp0s9 up
         enabled: true
 ```
 
-Файлы daemons и frr.conf должны лежать в каталоге ansible/templates.
+Файлы daemons и frr.conf должны лежать в каталоге templates.
 
 Давайте подробнее рассмотрим эти файлы. Содержимое файла daemons одинаково на всех хостах, а вот содержание файла frr.conf на всех хостах будет разное.
 
@@ -676,22 +674,21 @@ router3 ansible_host=192.168.50.12 ansible_user=vagrant ansible_ssh_private_key_
 Далее, выбираем один из роутеров, на котором изменим «стоимость интерфейса». Например поменяем стоимость интерфейса enp0s8 на router1:
 
 ```
-vtysh
+root@router1:~# vtysh
 
-Hello, this is FRRouting (version 8.2.2).
+Hello, this is FRRouting (version 10.0.1).
 Copyright 1996-2005 Kunihiro Ishiguro, et al.
 
-conf t
-int enp0s8
-ip ospf cost 1000
-exit
-exit
-show ip route ospf
-
-Codes: K - kernel route, C - connected, S - static, R - RIP,
-       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+router1# conf t
+router1(config)# int enp0s8
+router1(config-if)# ip ospf cost 1000
+router1(config-if)# exit 
+router1(config)# exit
+router1# show ip route ospf
+Codes: K - kernel route, C - connected, L - local, S - static,
+       R - RIP, O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
        T - Table, v - VNC, V - VNC-Direct, A - Babel, F - PBR,
-       f - OpenFabric,
+       f - OpenFabric, t - Table-Direct,
        > - selected route, * - FIB route, q - queued, r - rejected, b - backup
        t - trapped, o - offload failure
 
@@ -706,16 +703,16 @@ O>* 192.168.30.0/24 [110/200] via 10.0.12.2, enp0s9, weight 1, 00:02:59
 На router2
 
 ```
-vtysh
+root@router2:~# vtysh
 
-Hello, this is FRRouting (version 8.2.2).
+Hello, this is FRRouting (version 10.0.1).
 Copyright 1996-2005 Kunihiro Ishiguro, et al.
 
-show ip route ospf
-Codes: K - kernel route, C - connected, S - static, R - RIP,
-       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+router2# show ip route ospf
+Codes: K - kernel route, C - connected, L - local, S - static,
+       R - RIP, O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
        T - Table, v - VNC, V - VNC-Direct, A - Babel, F - PBR,
-       f - OpenFabric,
+       f - OpenFabric, t - Table-Direct,
        > - selected route, * - FIB route, q - queued, r - rejected, b - backup
        t - trapped, o - offload failure
 
@@ -818,23 +815,16 @@ tcpdump -i enp0s8
 Поменяем стоимость интерфейса enp0s8 на router2:
 
 ```
-vtysh
+root@router2:~# vtysh
 
-Hello, this is FRRouting (version 8.2.2).
+Hello, this is FRRouting (version 10.0.1).
 Copyright 1996-2005 Kunihiro Ishiguro, et al.
 
-conf t
-int enp0s8
-ip ospf cost 1000
-exit
-exit
-
-show ip route ospf
-
-Codes: K - kernel route, C - connected, S - static, R - RIP,
-       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+router2# show ip route ospf
+Codes: K - kernel route, C - connected, L - local, S - static,
+       R - RIP, O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
        T - Table, v - VNC, V - VNC-Direct, A - Babel, F - PBR,
-       f - OpenFabric,
+       f - OpenFabric, t - Table-Direct,
        > - selected route, * - FIB route, q - queued, r - rejected, b - backup
        t - trapped, o - offload failure
 
