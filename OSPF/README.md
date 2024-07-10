@@ -167,7 +167,7 @@ end
 
 #### Конфигурационный файл: ansible.cfg — файл описывает базовые настройки для работы Ansible:
 
-```bash
+```
 [defaults]
 # Отключение проверки ключа хоста
 host_key_checking = false
@@ -179,7 +179,7 @@ command_warnings= false
 
 #### Файл инвентаризации hosts — данный файл хранит информацию о том, как подключиться к хосту:
 
-```bash
+```
 [routers]
 router1 ansible_host=192.168.50.10 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/router1/virtualbox/private_key
 router2 ansible_host=192.168.50.11 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/router2/virtualbox/private_key
@@ -193,7 +193,7 @@ router3 ansible_host=192.168.50.12 ansible_user=vagrant ansible_ssh_private_key_
 - ansible_ssh_private_key — адрес расположения ssh-ключа
 - В файл инвентаризации также можно добовлять переменные, которые могут автоматически добавляться в jinja template. Добавление переменных будет рассмотрено далее.
 
-#### Ansible-playbook provision.yml — основной файл, в котором содержатся инструкции (модули) по настройке для Ansible
+#### Ansible-playbook ospf.yml — основной файл, в котором содержатся инструкции (модули) по настройке для Ansible
 
 #### Дополнительно можно создать каталоги для темплейтов конфигурационных файлов (templates) и файлов с переменными (defaults)
 
@@ -201,14 +201,14 @@ router3 ansible_host=192.168.50.12 ansible_user=vagrant ansible_ssh_private_key_
 
 Перед настройкой FRR рекомендуется поставить базовые программы для изменения конфигурационных файлов (vim) и изучения сети (traceroute, tcpdump, net-tools):
 
-```bash
+```
 apt update
 apt install vim traceroute tcpdump net-tools
 ```
 
 Пример установки пакетов с помощью Ansible
 
-```yml
+```
 ---
 # Начало файла provision.yml
 - name: OSPF
@@ -240,33 +240,33 @@ apt install vim traceroute tcpdump net-tools
 
 - Отключаем файерволл ufw и удаляем его из автозагрузки:
 
-```bash
+```
 systemctl stop ufw
 systemctl disable ufw
 ```
 
 - Добавляем gpg ключ:
 
-```bash
+```
 curl -s https://deb.frrouting.org/frr/keys.asc | sudo apt-key add -
 ```
 
 - Добавляем репозиторий c пакетом FRR:
 
-```bash
+```
 echo deb https://deb.frrouting.org/frr $(lsb_release -s -c) frr-stable > /etc/apt/sources.list.d/frr.list
 ```
 
 - Обновляем пакеты и устанавливаем FRR:
 
-```bash
+```
 sudo apt update
 sudo apt install frr frr-pythontools -y
 ```
 
 - Разрешаем (включаем) маршрутизацию транзитных пакетов:
 
-```bash
+```
 sysctl net.ipv4.conf.all.forwarding=1
 ```
 
@@ -276,7 +276,7 @@ sysctl net.ipv4.conf.all.forwarding=1
 
 vim /etc/frr/daemons
 
-```bash
+```
 zebra=yes
 ospfd=yes
 bgpd=no
@@ -306,18 +306,45 @@ pathd=no
 Для начала нам необходимо узнать имена интерфейсов и их адреса. Сделать это можно с помощью двух способов:
 
 - Посмотреть в linux: ip a | grep inet
-
-![2024-02-29_09-11-20](https://github.com/dimkaspaun/OSPF/assets/156161074/5f9e1e74-962c-467d-a985-059edab9d295)
+```
+root@router1:~#  ip a | grep inet
+    inet 127.0.0.1/8 scope host lo
+    inet6 ::1/128 scope host 
+    inet 10.0.2.15/24 brd 10.0.2.255 scope global dynamic enp0s3
+    inet6 fe80::1c:97ff:fe45:100d/64 scope link 
+    inet 10.0.10.1/30 brd 10.0.10.3 scope global enp0s8
+    inet6 fe80::a00:27ff:febf:9bc8/64 scope link 
+    inet 10.0.12.1/30 brd 10.0.12.3 scope global enp0s9
+    inet6 fe80::a00:27ff:feaa:83dc/64 scope link 
+    inet 192.168.10.1/24 brd 192.168.10.255 scope global enp0s10
+    inet6 fe80::a00:27ff:fecd:faf4/64 scope link 
+    inet 192.168.50.10/24 brd 192.168.50.255 scope global enp0s16
+    inet6 fe80::a00:27ff:fe53:574/64 scope link 
+```
 
 - Зайти в интерфейс FRR и посмотреть информацию об интерфейсах
+```
+root@router1:~# vtysh
 
-![2024-02-28_16-54-25](https://github.com/dimkaspaun/OSPF/assets/156161074/a0b611a5-2002-4529-beef-ae1fb06951bc)
+Hello, this is FRRouting (version 10.0.1).
+Copyright 1996-2005 Kunihiro Ishiguro, et al.
+
+router1# show interface brief
+Interface       Status  VRF             Addresses
+---------       ------  ---             ---------
+enp0s3          up      default         10.0.2.15/24
+enp0s8          up      default         10.0.10.1/30
+enp0s9          up      default         10.0.12.1/30
+enp0s10         up      default         192.168.10.1/24
+enp0s16         up      default         192.168.50.10/24
+lo              up      default 
+```
 
 В обоих примерах мы увидем имена сетевых интерфейсов, их ip-адреса и маски подсети. Исходя из схемы мы понимаем, что для настройки OSPF нам достаточно описать интерфейсы enp0s8, enp0s9, enp0s10
 
 Создаём файл /etc/frr/frr.conf и вносим в него следующую информацию:
 
-```bash
+```
 !Указание версии FRR
 frr version 8.2.2
 frr defaults traditional
@@ -395,7 +422,7 @@ default-information originate always
 - у владельца на чтение и запись
 - у группы только на чтение
 
-```bash
+```
 ls -l /etc/frr
 ```
 
@@ -404,25 +431,51 @@ ls -l /etc/frr
 
 Если права или владелец файла указан неправильно, то нужно поменять владельца и назначить правильные права, например:
 
-```bash
+```
 chown frr:frr /etc/frr/frr.conf
 chmod 640 /etc/frr/frr.conf
 ```
 
 - Перезапускаем FRR и добавляем его в автозагрузку
 
-```bash
+```
 systemctl restart frr
 systemctl enable frr
 ```
 
 - Проверям, что OSPF перезапустился без ошибок
 
-```bash
-systemctl status frr
+```
+root@router1:~# systemctl status frr
+● frr.service - FRRouting
+     Loaded: loaded (/lib/systemd/system/frr.service; enabled; vendor preset: enabled)
+     Active: active (running) since Wed 2024-07-10 06:39:56 UTC; 20min ago
+       Docs: https://frrouting.readthedocs.io/en/latest/setup.html
+    Process: 7836 ExecStart=/usr/lib/frr/frrinit.sh start (code=exited, status=0/SUCCESS)
+   Main PID: 7856 (watchfrr)
+     Status: "FRR Operational"
+      Tasks: 10 (limit: 1117)
+     Memory: 20.4M
+     CGroup: /system.slice/frr.service
+             ├─7856 /usr/lib/frr/watchfrr -d -F traditional zebra mgmtd ospfd staticd
+             ├─7869 /usr/lib/frr/zebra -d -F traditional -A 127.0.0.1 -s 90000000
+             ├─7874 /usr/lib/frr/mgmtd -d -F traditional -A 127.0.0.1
+             ├─7876 /usr/lib/frr/ospfd -d -F traditional -A 127.0.0.1
+             └─7879 /usr/lib/frr/staticd -d -F traditional -A 127.0.0.1
+
+Jul 10 06:39:51 router1 watchfrr[7856]: [VTVCM-Y2NW3] Configuration Read in Took: 00:00:00
+Jul 10 06:39:51 router1 frrinit.sh[7897]: [7897|watchfrr] Configuration file[/etc/frr/frr.conf] processing failure: 2
+Jul 10 06:39:51 router1 watchfrr[7856]: [ZJW5C-1EHNT] restart all process 7857 exited with non-zero status 2
+Jul 10 06:39:56 router1 watchfrr[7856]: [QDG3Y-BY5TN] mgmtd state -> up : connect succeeded
+Jul 10 06:39:56 router1 watchfrr[7856]: [QDG3Y-BY5TN] ospfd state -> up : connect succeeded
+Jul 10 06:39:56 router1 watchfrr[7856]: [QDG3Y-BY5TN] zebra state -> up : connect succeeded
+Jul 10 06:39:56 router1 watchfrr[7856]: [QDG3Y-BY5TN] staticd state -> up : connect succeeded
+Jul 10 06:39:56 router1 watchfrr[7856]: [KWE5Q-QNGFC] all daemons up, doing startup-complete notify
+Jul 10 06:39:56 router1 frrinit.sh[7836]:  * Started watchfrr
+Jul 10 06:39:56 router1 systemd[1]: Started FRRouting.
 ```
 
-![2024-02-29_09-13-57](https://github.com/dimkaspaun/OSPF/assets/156161074/1c623ec4-b8ed-4b93-8988-806568b5cf22)
+
 
 Если мы правильно настроили OSPF, то с любого хоста нам должны быть доступны сети:
 
