@@ -15,19 +15,19 @@ for pid in /proc/[0-9]*/; do
             tty="?"
         fi
 
-        # Считайте статус процесса из ыфайла состояния
+        # Считайте статус процесса из файла состояния
         status=$(awk '/State/ {print $2}' /proc/$pid/status)
 
-        # Read the process's command line from the cmdline file
+        # Прочитаем строку процесса из файла cmdline
         cmd=$(tr '\0' ' ' < /proc/$pid/cmdline)
 
-        # Read the process's total CPU time from the stat file
+        # Считаем общее время CPU из файла stat
         utime=$(awk '{print $14}' /proc/$pid/stat)
         stime=$(awk '{print $15}' /proc/$pid/stat)
         total_time=$((utime + stime))
         total_time=$((total_time / 100))
 
-        # Print the process information in the same format as ps ax
+        # Выведем информацию о процессе
         printf "%-10s %-5s %-5s %02d:%02d:%02d %s\n" "$pid" "$tty" "$status" "$(($total_time / 3600))" "$((($total_time % 3600) / 60))" "$(($total_time % 60))" "$cmd"
     fi
 done
