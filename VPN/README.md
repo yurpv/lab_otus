@@ -142,3 +142,59 @@ systemctl start openvpn@server
 systemctl enable openvpn@server
 ```
 
+### Далее необходимо замерить скорость в туннеле:
+
+- на openvpn сервере запускаем iperf3 в режиме сервера
+
+```
+root@server:~# iperf3 -s &
+[1] 3062
+root@server:~# -----------------------------------------------------------
+Server listening on 5201
+-----------------------------------------------------------
+Accepted connection from 10.10.10.2, port 34568
+[  5] local 10.10.10.1 port 5201 connected to 10.10.10.2 port 34584
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-1.00   sec  30.8 MBytes   258 Mbits/sec                  
+[  5]   1.00-2.00   sec  34.7 MBytes   291 Mbits/sec                  
+[  5]   2.00-3.00   sec  34.7 MBytes   291 Mbits/sec                  
+[  5]   3.00-4.00   sec  33.2 MBytes   278 Mbits/sec                  
+[  5]   4.00-5.00   sec  30.8 MBytes   258 Mbits/sec                  
+[  5]   5.00-6.00   sec  32.8 MBytes   275 Mbits/sec                  
+[  5]   6.00-7.00   sec  34.3 MBytes   287 Mbits/sec                  
+[  5]   7.00-8.00   sec  34.9 MBytes   293 Mbits/sec                  
+[  5]   8.00-9.00   sec  34.9 MBytes   293 Mbits/sec                  
+[  5]   9.00-10.00  sec  32.2 MBytes   270 Mbits/sec                  
+[  5]  10.00-11.00  sec  33.0 MBytes   277 Mbits/sec                  
+[  5]  11.00-12.00  sec  34.3 MBytes   288 Mbits/sec                  
+[  5]  13.00-14.00  sec  32.3 MBytes   271 Mbits/sec                  
+[  5]  14.00-15.00  sec  30.7 MBytes   257 Mbits/sec                  
+[  5]  14.00-15.00  sec  30.7 MBytes   257 Mbits/sec                  
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate
+[  5]   0.00-15.00  sec   521 MBytes   292 Mbits/sec                  receiver
+iperf3: the client has terminated
+-----------------------------------------------------------
+Server listening on 5201
+-----------------------------------------------------------
+```
+
+- на openvpn клиенте запускаем iperf3 в режиме клиента и замеряем скорость в туннеле
+
+```
+root@client:~# iperf3 -c 10.10.10.1 -t 40 -i 5
+Connecting to host 10.10.10.1, port 5201
+[  5] local 10.10.10.2 port 34584 connected to 10.10.10.1 port 5201
+[ ID] Interval           Transfer     Bitrate         Retr  Cwnd
+[  5]   0.00-5.00   sec   169 MBytes   283 Mbits/sec  194    264 KBytes       
+[  5]   5.00-10.00  sec   169 MBytes   283 Mbits/sec   21    448 KBytes       
+[  5]  10.00-15.00  sec   165 MBytes   277 Mbits/sec   55    276 KBytes       
+[  5]  15.00-15.66  sec  22.5 MBytes   285 Mbits/sec    0    281 KBytes       
+- - - - - - - - - - - - - - - - - - - - - - - - -
+[ ID] Interval           Transfer     Bitrate         Retr
+[  5]   0.00-15.66  sec   525 MBytes   281 Mbits/sec  270             sender
+[  5]   0.00-15.66  sec  0.00 Bytes  0.00 bits/sec                  receiver
+iperf3: interrupt - the client has terminated
+```
+
+
