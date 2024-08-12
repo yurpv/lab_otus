@@ -295,17 +295,67 @@ DH parameters of size 2048 created at /etc/openvpn/pki/dh.pem
 ```
 root@server:/etc/openvpn# openvpn --genkey secret ca.key
 ```
-# Генерируем необходимые ключи и сертификаты для клиента
-echo 'client' | /usr/share/easy-rsa/easyrsa gen-req client nopass
-echo 'yes' | /usr/share/easy-rsa/easyrsa sign-req client client
 
-# Создаем конфигурационный файл сервера 
-vim /etc/openvpn/server.conf
+- Генерируем необходимые ключи и сертификаты для клиента
+```
+root@server:/etc/openvpn# echo 'client' | /usr/share/easy-rsa/easyrsa gen-req client nopass
+Using SSL: openssl OpenSSL 3.0.2 15 Mar 2022 (Library: OpenSSL 3.0.2 15 Mar 2022)
 
-# Зададим параметр iroute для клиента
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Common Name (eg: your user, host, or server name) [client]:
+Keypair and certificate request completed. Your files are:
+req: /etc/openvpn/pki/reqs/client.req
+key: /etc/openvpn/pki/private/client.key
+```
+```
+root@server:/etc/openvpn# echo 'yes' | /usr/share/easy-rsa/easyrsa sign-req client client
+Using SSL: openssl OpenSSL 3.0.2 15 Mar 2022 (Library: OpenSSL 3.0.2 15 Mar 2022)
+
+
+You are about to sign the following certificate.
+Please check over the details shown below for accuracy. Note that this request
+has not been cryptographically verified. Please be sure it came from a trusted
+source or that you have verified the request checksum with the sender.
+
+Request subject, to be signed as a client certificate for 825 days:
+
+subject=
+    commonName                = client
+
+
+Type the word 'yes' to continue, or any other input to abort.
+  Confirm request details: Using configuration from /etc/openvpn/pki/easy-rsa-2631.xfnVbF/tmp.3qFlyr
+Check that the request matches the signature
+Signature ok
+The Subject's Distinguished Name is as follows
+commonName            :ASN.1 12:'client'
+Certificate is to be certified until Nov 15 09:20:35 2026 GMT (825 days)
+
+Write out database with 1 new entries
+Data Base Updated
+
+Certificate created at: /etc/openvpn/pki/issued/client.crt
+```
+
+- Создаем конфигурационный файл сервера 
+```
+vi /etc/openvpn/server.conf
+```
+
+- Зададим параметр iroute для клиента
+```
 echo 'iroute 10.10.10.0 255.255.255.0' > /etc/openvpn/client/client
+```
 
-# Содержимое файла server.conf
+- Содержимое файла server.conf
+```
 port 1207 
 proto udp 
 dev tun 
@@ -324,17 +374,19 @@ persist-tun
 status /var/log/openvpn-status.log 
 log /var/log/openvpn.log 
 verb 3
+```
 
-
-# Запускаем сервис (при необходимости создать файл юнита как в задании 1) 
+- Запускаем сервис (при необходимости создать файл юнита как в задании 1) 
+```
 systemctl start openvpn@server
 systemctl enable openvpn@server
+```
 
+### На хост-машине: 
 
-На хост-машине: 
-
-1) Необходимо создать файл client.conf со следующим содержимым: 
-	dev tun 
+- Необходимо создать файл client.conf со следующим содержимым: 
+```
+dev tun 
 proto udp 
 remote 192.168.56.10 1207 
 client 
@@ -348,13 +400,75 @@ persist-key
 persist-tun 
 comp-lzo 
 verb 3 
-2) Скопировать в одну директорию с client.conf файлы с сервера:     	   
+```
+- Скопировать в одну директорию с client.conf файлы с сервера:     	   
+```
 /etc/openvpn/pki/ca.crt 
 /etc/openvpn/pki/issued/client.crt 
 /etc/openvpn/pki/private/client.key
+```
+- Далее можно проверить подключение с помощью: openvpn --config client.conf
+```
+root@client:~# openvpn --config /etc/openvpn/client.conf
+2024-08-12 09:29:28 WARNING: Compression for receiving enabled. Compression has been used in the past to break encryption. Sent packets are not compressed unless "allow-compression yes" is also set.
+2024-08-12 09:29:28 --cipher is not set. Previous OpenVPN version defaulted to BF-CBC as fallback when cipher negotiation failed in this case. If you need this fallback please add '--data-ciphers-fallback BF-CBC' to your configuration and/or add BF-CBC to --data-ciphers.
+2024-08-12 09:29:28 OpenVPN 2.5.9 x86_64-pc-linux-gnu [SSL (OpenSSL)] [LZO] [LZ4] [EPOLL] [PKCS11] [MH/PKTINFO] [AEAD] built on Jun 27 2024
+2024-08-12 09:29:28 library versions: OpenSSL 3.0.2 15 Mar 2022, LZO 2.10
+2024-08-12 09:29:28 WARNING: No server certificate verification method has been enabled.  See http://openvpn.net/howto.html#mitm for more info.
+2024-08-12 09:29:28 TCP/UDP: Preserving recently used remote address: [AF_INET]192.168.56.10:1207
+2024-08-12 09:29:28 Socket Buffers: R=[212992->212992] S=[212992->212992]
+2024-08-12 09:29:28 UDP link local (bound): [AF_INET][undef]:1194
+2024-08-12 09:29:28 UDP link remote: [AF_INET]192.168.56.10:1207
+2024-08-12 09:29:28 TLS: Initial packet from [AF_INET]192.168.56.10:1207, sid=5fbe9102 c656161d
+2024-08-12 09:29:28 VERIFY OK: depth=1, CN=rasvpn
+2024-08-12 09:29:28 VERIFY OK: depth=0, CN=rasvpn
+2024-08-12 09:29:28 Control Channel: TLSv1.3, cipher TLSv1.3 TLS_AES_256_GCM_SHA384, peer certificate: 2048 bit RSA, signature: RSA-SHA256
+2024-08-12 09:29:28 [rasvpn] Peer Connection Initiated with [AF_INET]192.168.56.10:1207
+2024-08-12 09:29:28 PUSH: Received control message: 'PUSH_REPLY,route 10.10.10.0 255.255.255.0,topology net30,ping 10,ping-restart 120,ifconfig 10.10.10.6 10.10.10.5,peer-id 0,cipher AES-256-GCM'
+2024-08-12 09:29:28 OPTIONS IMPORT: timers and/or timeouts modified
+2024-08-12 09:29:28 OPTIONS IMPORT: --ifconfig/up options modified
+2024-08-12 09:29:28 OPTIONS IMPORT: route options modified
+2024-08-12 09:29:28 OPTIONS IMPORT: peer-id set
+2024-08-12 09:29:28 OPTIONS IMPORT: adjusting link_mtu to 1625
+2024-08-12 09:29:28 OPTIONS IMPORT: data channel crypto options modified
+2024-08-12 09:29:28 Data Channel: using negotiated cipher 'AES-256-GCM'
+2024-08-12 09:29:28 Outgoing Data Channel: Cipher 'AES-256-GCM' initialized with 256 bit key
+2024-08-12 09:29:28 Incoming Data Channel: Cipher 'AES-256-GCM' initialized with 256 bit key
+2024-08-12 09:29:28 net_route_v4_best_gw query: dst 0.0.0.0
+2024-08-12 09:29:28 net_route_v4_best_gw result: via 10.0.2.2 dev eth0
+2024-08-12 09:29:28 ROUTE_GATEWAY 10.0.2.2/255.255.255.0 IFACE=eth0 HWADDR=08:00:27:c8:98:64
+2024-08-12 09:29:28 TUN/TAP device tun0 opened
+2024-08-12 09:29:28 net_iface_mtu_set: mtu 1500 for tun0
+2024-08-12 09:29:28 net_iface_up: set tun0 up
+2024-08-12 09:29:28 net_addr_ptp_v4_add: 10.10.10.6 peer 10.10.10.5 dev tun0
+2024-08-12 09:29:28 net_route_v4_add: 10.10.10.0/24 via 10.10.10.5 dev [NULL] table 0 metric -1
+2024-08-12 09:29:28 Initialization Sequence Completed
+```
 
-Далее можно проверить подключение с помощью: openvpn --config client.conf
+- При успешном подключении проверяем пинг по внутреннему IP адресу  сервера в туннеле: ping -c 4 10.10.10.1 
+```
+root@client:~# ping -c 4 10.10.10.1
+PING 10.10.10.1 (10.10.10.1) 56(84) bytes of data.
+64 bytes from 10.10.10.1: icmp_seq=1 ttl=64 time=1.41 ms
+64 bytes from 10.10.10.1: icmp_seq=2 ttl=64 time=1.77 ms
+64 bytes from 10.10.10.1: icmp_seq=3 ttl=64 time=1.79 ms
+64 bytes from 10.10.10.1: icmp_seq=4 ttl=64 time=1.75 ms
 
-При успешном подключении проверяем пинг по внутреннему IP адресу  сервера в туннеле: ping -c 4 10.10.10.1 
+--- 10.10.10.1 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3012ms
+rtt min/avg/max/mdev = 1.409/1.679/1.790/0.156 ms
+```
 
-Также проверяем командой ip r (netstat -rn) на хостовой машине что сеть туннеля импортирована в таблицу маршрутизации. 
+- Также проверяем командой ip r (netstat -rn) на хостовой машине что сеть туннеля импортирована в таблицу маршрутизации. 
+```
+root@client:~# netstat -rn
+Kernel IP routing table
+Destination     Gateway         Genmask         Flags   MSS Window  irtt Iface
+0.0.0.0         10.0.2.2        0.0.0.0         UG        0 0          0 eth0
+10.0.2.0        0.0.0.0         255.255.255.0   U         0 0          0 eth0
+10.0.2.2        0.0.0.0         255.255.255.255 UH        0 0          0 eth0
+10.0.2.3        0.0.0.0         255.255.255.255 UH        0 0          0 eth0
+10.10.10.0      10.10.10.5      255.255.255.0   UG        0 0          0 tun0
+10.10.10.5      0.0.0.0         255.255.255.255 UH        0 0          0 tun0
+192.168.56.0    0.0.0.0         255.255.255.0   U         0 0          0 eth1
+```
