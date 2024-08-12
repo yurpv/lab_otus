@@ -136,8 +136,9 @@ ExecStart=/usr/sbin/openvpn --cd /etc/openvpn/ --config %i.conf
 [Install] 
 WantedBy=multi-user.target
 ```
-- Запускаем сервис 
+- Запускаем сервис
+```
 systemctl start openvpn@server 
 systemctl enable openvpn@server
-
+```
 
