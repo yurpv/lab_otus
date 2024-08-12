@@ -97,5 +97,47 @@ WantedBy=multi-user.target
 systemctl start openvpn@server 
 systemctl enable openvpn@server
 ```
+### Настройка openvpn клиента
+
+- Cоздаем конфигурационный файл OpenVPN 
+```
+vim /etc/openvpn/server.conf
+```
+
+- Содержимое конфигурационного файла  
+```
+dev tap 
+remote 192.168.56.10 
+ifconfig 10.10.10.2 255.255.255.0 
+topology subnet 
+route 192.168.56.0 255.255.255.0 
+secret /etc/openvpn/static.key
+comp-lzo
+status /var/log/openvpn-status.log 
+log /var/log/openvpn.log 
+verb 3 
+```
+
+- На хост 2 в директорию /etc/openvpn необходимо скопировать файл-ключ static.key, который был создан на хосте 1.  
+
+- Создаем service unit для запуска OpenVPN
+```
+vim /etc/systemd/system/openvpn@.service
+```
+- Содержимое файла-юнита
+```
+[Unit] 
+Description=OpenVPN Tunneling Application On %I 
+After=network.target 
+[Service] 
+Type=notify 
+PrivateTmp=true 
+ExecStart=/usr/sbin/openvpn --cd /etc/openvpn/ --config %i.conf 
+[Install] 
+WantedBy=multi-user.target
+```
+- Запускаем сервис 
+systemctl start openvpn@server 
+systemctl enable openvpn@server
 
 
