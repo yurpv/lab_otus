@@ -1,0 +1,13 @@
+---
+- name: Disable SELinux
+  selinux:
+    state: disabled
+
+- name: install packages
+      apt:
+        name:
+          - openvpn
+          - iperf3
+          - net-tools
+        state: present
+        update_cache: true
