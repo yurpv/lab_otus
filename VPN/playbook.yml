@@ -1,3 +1,8 @@
+---
+- name: Bootstrap
+  hosts: all
+  roles:
+    - role: bootstrap
 - name: Configuring server
   hosts: server
   roles:
