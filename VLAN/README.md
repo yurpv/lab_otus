@@ -178,3 +178,63 @@ rtt min/avg/max/mdev = 0.021/0.033/0.052/0.014 ms
        valid_lft forever preferred_lft forever
 ```
 
+### Настройка VLAN на Ubuntu:
+
+- На хосте testClient2 требуется создать файл /etc/netplan/50-cloud-init.yaml со следующим параметрами:
+```
+root@testClient2:~# more /etc/netplan/50-cloud-init.yaml
+# This file is generated from information provided by the datasource.  Changes
+# to it will not persist across an instance reboot.  To disable cloud-init's
+# network configuration capabilities, write a file
+# /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg with the following:
+# network: {config: disabled}
+network:
+    version: 2
+    ethernets:
+        enp0s3:
+            dhcp4: true
+        #В разделе ethernets добавляем порт, на котором будем настраивать VLAN
+        enp0s8: {}
+    #Настройка VLAN
+    vlans:
+        #Имя VLANа
+        vlan2:
+          #Указываем номер VLAN`а
+          id: 2
+          #Имя физического интерфейса
+          link: enp0s8
+          #Отключение DHCP-клиента
+          dhcp4: no
+          #Указываем ip-адрес
+          addresses: [10.10.10.254/24]
+```
+
+- На хосте testServer2 создадим идентичный файл с другим IP-адресом (10.10.10.1).</br>
+После создания файлов нужно перезапустить сеть на обоих хостах: netplan apply
+```
+root@testServer2:~# more /etc/netplan/50-cloud-init.yaml
+# This file is generated from information provided by the datasource.  Changes
+# to it will not persist across an instance reboot.  To disable cloud-init's
+# network configuration capabilities, write a file
+# /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg with the following:
+# network: {config: disabled}
+network:
+    version: 2
+    ethernets:
+        enp0s3:
+            dhcp4: true
+        #В разделе ethernets добавляем порт, на котором будем настраивать VLAN
+        enp0s8: {}
+    #Настройка VLAN
+    vlans:
+        #Имя VLANа
+        vlan2:
+          #Указываем номер VLAN`а
+          id: 2
+          #Имя физического интерфейса
+          link: enp0s8
+          #Отключение DHCP-клиента
+          dhcp4: no
+          #Указываем ip-адрес
+          addresses: [10.10.10.1/24]
+```
