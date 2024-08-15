@@ -48,7 +48,6 @@ apt install -y vim traceroute tcpdump net-tools
 - На хосте testClient1 требуется создать файл /etc/sysconfig/network-scripts/ifcfg-vlan1 со следующим параметрами:
 ```
 [root@testClient1 /]# vi /etc/sysconfig/network-scripts/ifcfg-vlan1
-```
 VLAN=yes
 #Тип интерфейса - VLAN
 TYPE=Vlan
