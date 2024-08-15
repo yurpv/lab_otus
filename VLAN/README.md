@@ -238,3 +238,51 @@ network:
           #Указываем ip-адрес
           addresses: [10.10.10.1/24]
 ```
+
+- После настройки второго VLAN`а ping должен работать между хостами testClient1, testServer1 и между хостами testClient2, testServer2.
+```
+[root@testServer1 /]# ping 10.10.10.254
+PING 10.10.10.254 (10.10.10.254) 56(84) bytes of data.
+64 bytes from 10.10.10.254: icmp_seq=1 ttl=64 time=1.19 ms
+64 bytes from 10.10.10.254: icmp_seq=2 ttl=64 time=1.01 ms
+64 bytes from 10.10.10.254: icmp_seq=3 ttl=64 time=0.919 ms
+64 bytes from 10.10.10.254: icmp_seq=4 ttl=64 time=0.891 ms
+^C
+--- 10.10.10.254 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3004ms
+rtt min/avg/max/mdev = 0.891/1.002/1.185/0.114 ms
+```
+```
+[root@testClient1 /]# ping 10.10.10.1
+PING 10.10.10.1 (10.10.10.1) 56(84) bytes of data.
+64 bytes from 10.10.10.1: icmp_seq=1 ttl=64 time=0.907 ms
+64 bytes from 10.10.10.1: icmp_seq=2 ttl=64 time=0.788 ms
+64 bytes from 10.10.10.1: icmp_seq=3 ttl=64 time=0.827 ms
+^C
+--- 10.10.10.1 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2046ms
+rtt min/avg/max/mdev = 0.788/0.840/0.907/0.059 ms
+```
+```
+root@testServer2:~# ping 10.10.10.254
+PING 10.10.10.254 (10.10.10.254) 56(84) bytes of data.
+64 bytes from 10.10.10.254: icmp_seq=1 ttl=64 time=0.383 ms
+64 bytes from 10.10.10.254: icmp_seq=2 ttl=64 time=0.403 ms
+64 bytes from 10.10.10.254: icmp_seq=3 ttl=64 time=0.298 ms
+64 bytes from 10.10.10.254: icmp_seq=4 ttl=64 time=0.679 ms
+^C
+--- 10.10.10.254 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3362ms
+rtt min/avg/max/mdev = 0.298/0.440/0.679/0.143 ms
+```
+```
+root@testClient2:~# ping 10.10.10.1
+PING 10.10.10.1 (10.10.10.1) 56(84) bytes of data.
+64 bytes from 10.10.10.1: icmp_seq=1 ttl=64 time=1.29 ms
+64 bytes from 10.10.10.1: icmp_seq=2 ttl=64 time=0.842 ms
+64 bytes from 10.10.10.1: icmp_seq=3 ttl=64 time=0.885 ms
+^C
+--- 10.10.10.1 ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2017ms
+rtt min/avg/max/mdev = 0.842/1.005/1.289/0.201 ms
+```
