@@ -286,3 +286,125 @@ PING 10.10.10.1 (10.10.10.1) 56(84) bytes of data.
 3 packets transmitted, 3 received, 0% packet loss, time 2017ms
 rtt min/avg/max/mdev = 0.842/1.005/1.289/0.201 ms
 ```
+
+## Настройка LACP между хостами inetRouter и centralRouter
+
+- Bond интерфейс будет работать через порты eth1 и eth2. 
+
+- Изначально необходимо на обоих хостах добавить конфигурационные файлы для интерфейсов eth1 и eth2:</br>
+(У интерфейса ifcfg-eth2 идентичный конфигурационный файл, в котором нужно изменить имя интерфейса.)
+```
+[root@inetRouter ~]# more /etc/sysconfig/network-scripts/ifcfg-eth1
+#Имя физического интерфейса
+DEVICE=eth1
+#Включать интерфейс при запуске системы
+ONBOOT=yes
+#Отключение DHCP-клиента
+BOOTPROTO=none
+#Указываем, что порт часть bond-интерфейса
+MASTER=bond0
+#Указываем роль bond
+SLAVE=yes
+NM_CONTROLLED=yes
+USERCTL=no
+```
+```
+[root@inetRouter ~]# more /etc/sysconfig/network-scripts/ifcfg-eth2
+#Имя физического интерфейса
+DEVICE=eth2
+#Включать интерфейс при запуске системы
+ONBOOT=yes
+#Отключение DHCP-клиента
+BOOTPROTO=none
+#Указываем, что порт часть bond-интерфейса
+MASTER=bond0
+#Указываем роль bond
+SLAVE=yes
+NM_CONTROLLED=yes
+USERCTL=no
+```
+```
+[root@centralRouter ~]# more /etc/sysconfig/network-scripts/ifcfg-eth1
+#Имя физического интерфейса
+DEVICE=eth1
+#Включать интерфейс при запуске системы
+ONBOOT=yes
+#Отключение DHCP-клиента
+BOOTPROTO=none
+#Указываем, что порт часть bond-интерфейса
+MASTER=bond0
+#Указываем роль bond
+SLAVE=yes
+NM_CONTROLLED=yes
+USERCTL=no
+```
+```
+[root@centralRouter ~]# more /etc/sysconfig/network-scripts/ifcfg-eth2
+#Имя физического интерфейса
+DEVICE=eth2
+#Включать интерфейс при запуске системы
+ONBOOT=yes
+#Отключение DHCP-клиента
+BOOTPROTO=none
+#Указываем, что порт часть bond-интерфейса
+MASTER=bond0
+#Указываем роль bond
+SLAVE=yes
+NM_CONTROLLED=yes
+USERCTL=no
+```
+
+- После настройки интерфейсов eth1 и eth2 нужно настроить bond-интерфейс, для этого создадим файл /etc/sysconfig/network-scripts/ifcfg-bond0
+```
+[root@inetRouter ~]# more /etc/sysconfig/network-scripts/ifcfg-bond0
+DEVICE=bond0
+NAME=bond0
+#Тип интерфейса — bond
+TYPE=Bond
+BONDING_MASTER=yes
+#Указаваем IP-адрес 
+IPADDR=192.168.255.1
+#Указываем маску подсети
+NETMASK=255.255.255.252
+ONBOOT=yes
+BOOTPROTO=static
+#Указываем режим работы bond-интерфейса Active-Backup
+# fail_over_mac=1 — данная опция «разрешает отвалиться» одному интерфейсу
+BONDING_OPTS="mode=1 miimon=100 fail_over_mac=1"
+NM_CONTROLLED=yes
+```
+
+- После создания данных конфигурационных файлов необходимо перезапустить сеть:
+systemctl restart NetworkManager
+> На некоторых версиях RHEL/CentOS перезапуск сетевого интерфейса не запустит bond-интерфейс, в этом случае рекомендуется перезапустить хост.
+
+- После настройки агрегации портов, необходимо проверить работу bond-интерфейса, для этого, на хосте inetRouter (192.168.255.1) запустим ping до centralRouter (192.168.255.2):
+```
+[root@inetRouter ~]# ping 192.168.255.2
+PING 192.168.255.2 (192.168.255.2) 56(84) bytes of data.
+64 bytes from 192.168.255.2: icmp_seq=1 ttl=64 time=0.532 ms
+64 bytes from 192.168.255.2: icmp_seq=2 ttl=64 time=0.901 ms
+64 bytes from 192.168.255.2: icmp_seq=3 ttl=64 time=0.423 ms
+64 bytes from 192.168.255.2: icmp_seq=4 ttl=64 time=0.765 ms
+^C
+--- 192.168.255.2 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3077ms
+rtt min/avg/max/mdev = 0.423/0.655/0.901/0.188 ms
+```
+
+- Не отменяя ping подключаемся к хосту centralRouter и выключаем там интерфейс eth1: 
+```
+[root@inetRouter ~]# ip link set down eth1
+[root@inetRouter ~]# ping 192.168.255.2
+PING 192.168.255.2 (192.168.255.2) 56(84) bytes of data.
+From 192.168.255.1 icmp_seq=1 Destination Host Unreachable
+From 192.168.255.1 icmp_seq=2 Destination Host Unreachable
+From 192.168.255.1 icmp_seq=3 Destination Host Unreachable
+From 192.168.255.1 icmp_seq=4 Destination Host Unreachable
+From 192.168.255.1 icmp_seq=5 Destination Host Unreachable
+From 192.168.255.1 icmp_seq=6 Destination Host Unreachable
+^C
+--- 192.168.255.2 ping statistics ---
+7 packets transmitted, 0 received, +6 errors, 100% packet loss, time 6170ms
+pipe 3
+```
