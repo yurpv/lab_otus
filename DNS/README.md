@@ -444,3 +444,42 @@ www            IN      A       192.168.50.16
 ```
 >- Соответственно файл named.newdns.lab будет скопирован на хост ns01 по адресу /etc/named/named.newdns.lab
 
+### Настройка Split-DNS
+
+- Прописанные зоны dns.lab и newdns.lab. 
+  Необходимо:
+   - client1 должен видеть запись web1.dns.lab и не видеть запись web2.dns.lab. 
+   - client2 может видеть обе записи из домена dns.lab, но не должен видеть записи домена newdns.lab
+
+- **Для настройки Split-DNS нужно:**
+
+- Создать дополнительный файл зоны dns.lab, в котором будет прописана только одна запись: vim /etc/named/named.dns.lab.client
+>- **Имя файла может отличаться от указанной зоны. У файла должны быть права 660, владелец — root, группа — named.**
+```
+[root@ns01 ~]# touch /etc/named/named.dns.lab.client
+[root@ns01 ~]# chgrp named /etc/named/named.dns.lab.client
+[root@ns01 ~]# chmod 660 /etc/named/named.dns.lab.client
+[root@ns01 ~]# ls -l /etc/named/named.dns.lab.client
+-rw-rw----. 1 root named 651 Aug 30 12:08 /etc/named/named.dns.lab.client
+```
+```
+[root@ns01 ~]# cat /etc/named/named.dns.lab.client
+$TTL 3600
+$ORIGIN dns.lab.
+@               IN      SOA     ns01.dns.lab. root.dns.lab. (
+                            2711201407 ; serial
+                            3600       ; refresh (1 hour)
+                            600        ; retry (10 minutes)
+                            86400      ; expire (1 day)
+                            600        ; minimum (10 minutes)
+                        )
+
+                IN      NS      ns01.dns.lab.
+                IN      NS      ns02.dns.lab.
+
+; DNS Servers
+ns01            IN      A       192.168.50.10
+ns02            IN      A       192.168.50.11
+; Web
+web1            IN      A       192.168.50.15
+```
