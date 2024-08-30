@@ -250,3 +250,64 @@ zone "dns.lab" {
     file "/etc/named/named.dns.lab";
 };
 ```
+
+- На хосте ns01 мы видим файл /etc/named/named.dns.lab с настройкой зоны:
+
+```
+[root@ns01 ~]# cat /etc/named/named.dns.lab
+$TTL 3600
+$ORIGIN dns.lab.
+@               IN      SOA     ns01.dns.lab. root.dns.lab. (
+                            2711201407 ; serial
+                            3600       ; refresh (1 hour)
+                            600        ; retry (10 minutes)
+                            86400      ; expire (1 day)
+                            600        ; minimum (10 minutes)
+                        )
+
+                IN      NS      ns01.dns.lab.
+                IN      NS      ns02.dns.lab.
+
+; DNS Servers
+ns01            IN      A       192.168.56.20
+ns02            IN      A       192.168.56.21
+```
+- В этот файл добавить имена:
+
+```bash
+;Web
+web1            IN      A       192.168.56.25
+web2            IN      A       192.168.56.26
+```
+```
+[root@ns01 ~]# vi /etc/named/named.dns.lab
+[root@ns01 ~]# cat /etc/named/named.dns.lab
+$TTL 3600
+$ORIGIN dns.lab.
+@               IN      SOA     ns01.dns.lab. root.dns.lab. (
+                            2711201407 ; serial
+                            3600       ; refresh (1 hour)
+                            600        ; retry (10 minutes)
+                            86400      ; expire (1 day)
+                            600        ; minimum (10 minutes)
+                        )
+
+                IN      NS      ns01.dns.lab.
+                IN      NS      ns02.dns.lab.
+
+; DNS Servers
+ns01            IN      A       192.168.50.10
+ns02            IN      A       192.168.50.11
+; WWW
+web1            IN      A       192.168.50.15
+web2            IN      A       192.168.50.16
+```
+
+>- Если изменения внесены вручную, то для применения настроек нужно:
+-  Перезапустить службу named: systemctl restart named
+-  Изменить значение Serial (добавить +1 к числу 2711201407), изменение значения serial укажет slave-серверам на то, что были внесены изменения и что им надо обновить свои файлы с зонами.
+
+- Выполнить проверку с клиента - обращениек  разным DNS-серверам с разными запросами:
+```
+
+```
