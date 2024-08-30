@@ -240,3 +240,13 @@ zone "dns.lab" {
     file "/etc/named/named.dns.lab";
 };
 ```
+
+- Похожий фрагмент файла /etc/named.conf находится на slave-сервере ns02:
+```
+// lab's zone
+zone "dns.lab" {
+    type slave;
+    masters { 192.168.50.10; };
+    file "/etc/named/named.dns.lab";
+};
+```
