@@ -59,3 +59,74 @@ Split DNS (split-horizon или split-brain) — это конфигурация
 ### Описание домашнего задания
 
 ## Работа со стендом и настройка DNS
+
+# 1. Развернуть стенд
+
+- Скачать стенд <https://github.com/erlong15/vagrant-bind> и изучить содержимое файлов:
+```
+[yurpv@precision3561 DNS]$ git clone https://github.com/erlong15/vagrant-bind
+Cloning into 'vagrant-bind'...
+remote: Enumerating objects: 27, done.
+remote: Total 27 (delta 0), reused 0 (delta 0), pack-reused 27 (from 1)
+Receiving objects: 100% (27/27), 4.40 KiB | 4.40 MiB/s, done.
+Resolving deltas: 100% (9/9), done.
+[yurpv@precision3561 DNS]$ cd vagrant-bind/
+[yurpv@precision3561 vagrant-bind]$ ls -l
+total 12
+drwxr-xr-x 2 yurpv yurpv 4096 авг 30 12:45 provisioning
+-rw-r--r-- 1 yurpv yurpv  414 авг 30 12:45 README.md
+-rw-r--r-- 1 yurpv yurpv  820 авг 30 12:45 Vagrantfile
+```
+
+- В файл Vagrantfile добавить еще один сервер client2 - [Vagrantfile]
+
+>- Vagranfile описывает создание 4 виртуальных машин на CentOS 7, каждой машине будет выделено по 256 МБ ОЗУ. В начале файла есть модуль, который отвечает за настройку ВМ с помощью Ansible.
+
+ - [playbook.yml] — это Ansible-playbook, в котором содержатся инструкции по настройке стенда
+ - client-motd — файл, содержимое которого будет появляться перед пользователем, который подключился по SSH
+ - named.ddns.lab и named.dns.lab — файлы описания зон ddns.lab и dns.lab соответсвенно
+ - master-named.conf и slave-named.conf — конфигурационные файлы, в которых хранятся настройки DNS-сервера
+ - client-resolv.conf и servers-resolv.conf — файлы, в которых содержатся IP-адреса DNS-серверов
+
+>- **Для нормальной работы DNS-серверов, на них должно быть настроено одинаковое время.** Для того, чтобы на всех серверах было одинаковое время, необходимо настроить NTP. В CentOS по умолчанию уже есть NTP-клиент Chrony. Обычно он всегда включен и добавлен в автозагрузку. Проверить работу службы можно командой: systemctl status chronyd
+
+>- **При варианте установки утилиты ntp, после установки необходимо:**
+>-  - Остановить службу chronyd: systemctl stop chronyd
+>-  - Удалить службу chronyd из автозагрузки: systemctl disable chronyd
+>-  - Включить службу ntpd: systemctl start ntpd
+>-  - Добавить службу ntpd в автозагрузку: systemctl enable ntpd
+
+>- Пример данной настройки в Ansible (YAML-формат):
+```yml
+- name: stop and disable chronyd
+  service:
+    name: chronyd
+    state: stopped
+    enabled: false
+- name: start and enable ntpd
+  service:
+    name: ntpd
+    state: started
+    enabled: true
+```
+>- **Альтернативный вариант — не устанавливать ntp и просто запустить службу chronyd: systemctl start chronyd**
+>- Пример данной настройки в Ansible (YAML формат):
+
+```yml
+- name: install packages
+  yum:
+    name:
+    - bind
+    - bind-utils
+    - vim
+    state: latest
+    update_cache: true
+
+- name: start chronyd
+  service:
+    name: chronyd
+    state: restarted
+    enabled: true
+```
+- В данном развертывании будет установлена утилита ntp
+>- **vagrant up --provision** - это команда, которая используется для настройки внутреннего окружения имеющейся виртуальной машины. Например, она позволяет добавить новые инструкции (скрипты) в ранее созданную виртуальную машину. 
