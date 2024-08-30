@@ -129,4 +129,38 @@ drwxr-xr-x 2 yurpv yurpv 4096 авг 30 12:45 provisioning
     enabled: true
 ```
 - В данном развертывании будет установлена утилита ntp
->- **vagrant up --provision** - это команда, которая используется для настройки внутреннего окружения имеющейся виртуальной машины. Например, она позволяет добавить новые инструкции (скрипты) в ранее созданную виртуальную машину. 
+>- **vagrant up --provision** - это команда, которая используется для настройки внутреннего окружения имеющейся виртуальной машины. Например, она позволяет добавить новые инструкции (скрипты) в ранее созданную виртуальную машину.
+
+- Перед выполнением следующих заданий, нужно обратить внимание, на каком адресе и порту работают наши DNS-сервера. 
+
+- Проверим на каком адресе и порту работают DNS-сервера:
+- - Посмотреть с помощью команды SS: ss -tulpn
+```
+[root@ns01 ~]# ss -tunlp
+Netid  State      Recv-Q Send-Q                                                         Local Address:Port                                                                        Peer Address:Port              
+udp    UNCONN     0      0                                                              192.168.50.10:53                                                                                     *:*                   users:(("named",pid=16689,fd=512))
+udp    UNCONN     0      0                                                                          *:68                                                                                     *:*                   users:(("dhclient",pid=2512,fd=6))
+udp    UNCONN     0      0                                                                          *:111                                                                                    *:*                   users:(("rpcbind",pid=344,fd=6))
+udp    UNCONN     0      0                                                              192.168.50.10:123                                                                                    *:*                   users:(("ntpd",pid=14804,fd=20))
+udp    UNCONN     0      0                                                                  10.0.2.15:123                                                                                    *:*                   users:(("ntpd",pid=14804,fd=19))
+udp    UNCONN     0      0                                                                  127.0.0.1:123                                                                                    *:*                   users:(("ntpd",pid=14804,fd=18))
+udp    UNCONN     0      0                                                                          *:123                                                                                    *:*                   users:(("ntpd",pid=14804,fd=16))
+udp    UNCONN     0      0                                                                          *:930                                                                                    *:*                   users:(("rpcbind",pid=344,fd=7))
+udp    UNCONN     0      0                                                                      [::1]:53                                                                                  [::]:*                   users:(("named",pid=16689,fd=513))
+udp    UNCONN     0      0                                                                       [::]:111                                                                                 [::]:*                   users:(("rpcbind",pid=344,fd=9))
+udp    UNCONN     0      0                                            [fe80::a00:27ff:fe69:44b0]%eth1:123                                                                                 [::]:*                   users:(("ntpd",pid=14804,fd=23))
+udp    UNCONN     0      0                                             [fe80::5054:ff:fe4d:77d3]%eth0:123                                                                                 [::]:*                   users:(("ntpd",pid=14804,fd=22))
+udp    UNCONN     0      0                                                                      [::1]:123                                                                                 [::]:*                   users:(("ntpd",pid=14804,fd=21))
+udp    UNCONN     0      0                                                                       [::]:123                                                                                 [::]:*                   users:(("ntpd",pid=14804,fd=17))
+udp    UNCONN     0      0                                                                       [::]:930                                                                                 [::]:*                   users:(("rpcbind",pid=344,fd=10))
+tcp    LISTEN     0      128                                                                        *:111                                                                                    *:*                   users:(("rpcbind",pid=344,fd=8))
+tcp    LISTEN     0      10                                                             192.168.50.10:53                                                                                     *:*                   users:(("named",pid=16689,fd=21))
+tcp    LISTEN     0      128                                                                        *:22                                                                                     *:*                   users:(("sshd",pid=5058,fd=3))
+tcp    LISTEN     0      128                                                            192.168.50.10:953                                                                                    *:*                   users:(("named",pid=16689,fd=23))
+tcp    LISTEN     0      100                                                                127.0.0.1:25                                                                                     *:*                   users:(("master",pid=811,fd=13))
+tcp    LISTEN     0      128                                                                     [::]:111                                                                                 [::]:*                   users:(("rpcbind",pid=344,fd=11))
+tcp    LISTEN     0      10                                                                     [::1]:53                                                                                  [::]:*                   users:(("named",pid=16689,fd=22))
+tcp    LISTEN     0      128                                                                     [::]:22                                                                                  [::]:*                   users:(("sshd",pid=5058,fd=4))
+tcp    LISTEN     0      100                                                                    [::1]:25                                                                                  [::]:*                   users:(("master",pid=811,fd=14))
+```
+
