@@ -164,3 +164,79 @@ tcp    LISTEN     0      128                                                    
 tcp    LISTEN     0      100                                                                    [::1]:25                                                                                  [::]:*                   users:(("master",pid=811,fd=14))
 ```
 
+- Посмотреть информацию в настройках DNS-сервера (**/etc/named.conf**)
+```
+[root@ns01 ~]# cat /etc/named.conf
+options {
+
+    // network
+        listen-on port 53 { 192.168.50.10; };
+        listen-on-v6 port 53 { ::1; };
+```
+```
+[root@ns02 ~]# cat /etc/named.conf
+options {
+
+    // network
+        listen-on port 53 { 192.168.50.11; };
+        listen-on-v6 port 53 { ::1; };
+```
+
+- На основе данной информации, нужно внести корректировки в файл /etc/resolv.conf для DNS-серверов:на хосте ns01 указать nameserver 192.168.50.21, а на хосте ns02 — 192.168.50.11
+
+>- В Ansible для этого можно воспользоваться шаблоном с Jinja. Изменим имя файла servers-resolv.conf на servers-resolv.conf.j2 и укажем там следующие условия:
+
+```bash
+domain dns.lab
+search dns.lab
+#Если имя сервера ns02, то указываем nameserver 192.168.50.11
+{% if ansible_hostname == 'ns02' %}
+nameserver 192.168.50.11
+{% endif %}
+#Если имя сервера ns01, то указываем nameserver 192.168.50.10
+{% if ansible_hostname == 'ns01' %}
+nameserver 192.168.50.10
+{% endif %}
+```
+>- После внесения измений в файл, нужно изменить ansible-playbook - вместо модуля copy модуль template:
+
+```yml
+- name: copy resolv.conf to the servers
+  template: src=servers-resolv.conf.j2 dest=/etc/resolv.conf owner=root group=root mode=0644
+```
+ YAML-формат:
+
+```yml
+- name: copy resolv.conf to the servers
+  template:
+    src: servers-resolv.conf.j2
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: 0644
+```
+
+### 2. Настройка  DNS
+
+- **Добавление имён в зону dns.lab**
+- Проверить, что зона dns.lab уже существует на DNS-серверах:
+
+```bash
+// Имя зоны
+zone "dns.lab" {
+    type master;
+    // Тем, у кого есть ключ zonetransfer.key можно получать копию файла зоны
+    allow-transfer { key "zonetransfer.key"; };
+    // Файл с настройками зоны
+    file "/etc/named/named.dns.lab";
+};
+```
+- Фрагмент файла /etc/named.conf на сервере ns01:
+```
+// lab's zone
+zone "dns.lab" {
+    type master;
+    allow-transfer { key "zonetransfer.key"; };
+    file "/etc/named/named.dns.lab";
+};
+```
