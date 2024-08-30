@@ -483,3 +483,33 @@ ns02            IN      A       192.168.50.11
 ; Web
 web1            IN      A       192.168.50.15
 ```
+
+- Внести изменения в файл /etc/named.conf на хостах ns01 и ns02
+
+- Прежде всего нужно сделать access листы для хостов client и client2. Сначала сгенерируем ключи для хостов client и client2, для этого на хосте ns01 запустим утилиту tsig-keygen (ключ может генериться 5 минут и более):
+```
+[root@ns01 ~]# tsig-keygen
+key "tsig-key" {
+        algorithm hmac-sha256;
+        secret "iU+S7SS2P6iWfENaWQIFRKoHQmIaTbu4jA6uw9a5Yyo=";
+};
+```
+
+- После генерации, мы увидем ключ (secret) и алгоритм с помощью которого он был сгенерирован. Оба этих параметра нам потребуются в access листе.
+>- Если нам потребуется, использовать другой алогоритм, то мы можем его указать как аргумент к команде, например: tsig-keygen -a hmac-md5
+
+- Всего нам потребуется 2 таких ключа. 
+```
+[root@client ~]# tsig-keygen client-key
+key "client-key" {
+        algorithm hmac-sha256;
+        secret "8V5VqHXrloRjSsUGK0YESZyYesHIzxCvsDT6/RwzoNs=";
+};
+```
+```
+[root@client2 ~]# tsig-keygen client2-key
+key "client2-key" {
+        algorithm hmac-sha256;
+        secret "b6Ncwas9gRXqO5en+yzQmIKXD44hdtGp7jsTuA9EpQ4=";
+};
+```
