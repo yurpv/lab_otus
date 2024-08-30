@@ -97,7 +97,7 @@ drwxr-xr-x 2 yurpv yurpv 4096 авг 30 12:45 provisioning
 >-  - Добавить службу ntpd в автозагрузку: systemctl enable ntpd
 
 >- Пример данной настройки в Ansible (YAML-формат):
-```yml
+```
 - name: stop and disable chronyd
   service:
     name: chronyd
@@ -112,7 +112,7 @@ drwxr-xr-x 2 yurpv yurpv 4096 авг 30 12:45 provisioning
 >- **Альтернативный вариант — не устанавливать ntp и просто запустить службу chronyd: systemctl start chronyd**
 >- Пример данной настройки в Ansible (YAML формат):
 
-```yml
+```
 - name: install packages
   yum:
     name:
@@ -200,13 +200,13 @@ nameserver 192.168.50.10
 ```
 >- После внесения измений в файл, нужно изменить ansible-playbook - вместо модуля copy модуль template:
 
-```yml
+```
 - name: copy resolv.conf to the servers
   template: src=servers-resolv.conf.j2 dest=/etc/resolv.conf owner=root group=root mode=0644
 ```
  YAML-формат:
 
-```yml
+```
 - name: copy resolv.conf to the servers
   template:
     src: servers-resolv.conf.j2
@@ -221,7 +221,7 @@ nameserver 192.168.50.10
 - **Добавление имён в зону dns.lab**
 - Проверить, что зона dns.lab уже существует на DNS-серверах:
 
-```bash
+```
 // Имя зоны
 zone "dns.lab" {
     type master;
