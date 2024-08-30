@@ -269,15 +269,15 @@ $ORIGIN dns.lab.
                 IN      NS      ns02.dns.lab.
 
 ; DNS Servers
-ns01            IN      A       192.168.56.20
-ns02            IN      A       192.168.56.21
+ns01            IN      A       192.168.50.10
+ns02            IN      A       192.168.50.11
 ```
 - В этот файл добавить имена:
 
 ```bash
 ;Web
-web1            IN      A       192.168.56.25
-web2            IN      A       192.168.56.26
+web1            IN      A       192.168.50.15
+web2            IN      A       192.168.50.16
 ```
 ```
 [root@ns01 ~]# vi /etc/named/named.dns.lab
