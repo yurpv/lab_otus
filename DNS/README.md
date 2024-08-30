@@ -537,3 +537,78 @@ acl client2 { !key client-key; key client2-key; 192.168.50.16; };
 
 - Описание ключей и access листов будет одинаковое для master и slave сервера.
 
+- - Далее нужно создать файл с настройками зоны dns.lab для client, для этого на мастер сервере создаём файл /etc/named/named.dns.lab.client и добавляем в него следующее содержимое:
+```
+$TTL 3600
+$ORIGIN dns.lab.
+@               IN      SOA     ns01.dns.lab. root.dns.lab. (
+                            2711201407 ; serial
+                            3600       ; refresh (1 hour)
+                            600        ; retry (10 minutes)
+                            86400      ; expire (1 day)
+                            600        ; minimum (10 minutes)
+                        )
+
+                IN      NS      ns01.dns.lab.
+                IN      NS      ns02.dns.lab.
+
+; DNS Servers
+ns01            IN      A       192.168.50.10
+ns02            IN      A       192.168.50.11
+; Web
+web1            IN      A       192.168.50.15
+```
+
+>- Это почти скопированный файл зоны dns.lab, в конце которого удалена строка с записью web2. Имя зоны надо оставить такое же — dns.lab
+
+- Далее нужно внести правки в /etc/named.conf
+
+>- Технология Split-DNS реализуется с помощью описания представлений (view), для каждого отдельного acl. В каждое представление (view) добавляются только те зоны, которые разрешено видеть хостам, адреса которых указаны в access листе.
+
+>- **Все ранее описанные зоны должны быть перенесены в модули view. Вне view зон быть недолжно, зона 'any' должна всегда находиться в самом низу.**
+
+- После применения всех вышеуказанных правил на хосте ns01 мы получим следующее содержимое файла [/etc/named.conf](master-named.conf)
+
+- Внести изменения в файл /etc/named.conf на сервере ns02. Файл будет похож на файл для ns01, только в настройках будет указание забирать информацию с сервера ns01 и указан тип slave. Итоговый файл для ns02 [/etc/named.conf](slave-named.conf)
+
+>- Так как файлы с конфигурациями получаются достаточно большими — возрастает вероятность сделать ошибку. При их правке можно воспользоваться утилитой **named-checkconf**. Она укажет в каких строчках есть ошибки. Использование данной утилиты рекомендуется после изменения настроек на DNS-сервере.
+```
+named-checkconf /etc/named.conf
+named-checkconf -t /var/named/chroot /etc/named.conf 
+```
+- После внесения данных изменений можно перезапустить (по очереди) службу named на серверах ns01 и ns02.
+
+- Проверка работы Split-DNS с хостов client и client2. Для проверки можно использовать утилиту ping:
+```
+ping www.newdns.lab
+ping web1.dns.lab
+ping web2.dns.lab
+```
+
+![image](https://github.com/user-attachments/assets/5e5fb24d-65b6-4d7e-b60c-a668db3db954)
+>- **На хосте мы видим, что client1 видит обе зоны (dns.lab и newdns.lab), однако информацию о хосте web2.dns.lab он получить не может.**
+
+![image](https://github.com/user-attachments/assets/2918c291-841b-4e98-af0f-a2852e08f79d)
+>- Тут мы понимаем, что client2 видит всю зону dns.lab и не видит зону newdns.lab
+Для того, чтобы проверить что master и slave сервера отдают одинаковую информацию, в файле /etc/resolv.conf можно удалить на время nameserver 192.168.50.10 и попробовать выполнить все те же проверки. Результат должен быть идентичный. 
+
+### Настройка Split-DNS c помощью Ansible
+
+- [Ansible-playbook] менять ничего не потребуется. Нужно изменить содержимое файлов master-named.conf и slave-named.conf, а также добавить файл [named.dns.lab.client].
+
+>- После перезапуска виртуалок стенда, файл /etc/resolv.conf перезаписывался
+>- Запрет изменения файла /etc/resolv.conf
+```
+[root@client2 ~]# chattr +i /etc/resolv.conf
+[root@client2 ~]# ls -la /etc/resolv.conf
+-rw-r--r--. 1 root root 80 Aug 30 12:16 /etc/resolv.conf
+[root@client2 ~]# lsattr /etc/resolv.conf
+----i----------- /etc/resolv.conf
+```
+>- Запрет изменения файла /etc/resolv.conf добавлено в playbook для клиентов
+```
+  - name: makefile immutable 
+    command: chattr +i /etc/resolv.conf 
+```
+
+
