@@ -513,3 +513,27 @@ key "client2-key" {
         secret "b6Ncwas9gRXqO5en+yzQmIKXD44hdtGp7jsTuA9EpQ4=";
 };
 ```
+
+- После их генерации добавим блок с access листами в конец файла /etc/named.conf
+
+```
+key "client-key" {
+ algorithm hmac-sha256;
+ secret "8V5VqHXrloRjSsUGK0YESZyYesHIzxCvsDT6/RwzoNs=";
+};
+
+key "client2-key" {
+ algorithm hmac-sha256;
+ secret "b6Ncwas9gRXqO5en+yzQmIKXD44hdtGp7jsTuA9EpQ4=";
+};
+
+acl client { !key client2-key; key client-key; 192.168.50.15; };
+acl client2 { !key client-key; key client2-key; 192.168.50.16; };
+```
+- В данном блоке access листов мы выделяем 2 блока:
+
+- client имеет адрес 192.168.50.15, использует client-key и не использует client2-key
+- client2 имеет адрес 192.168.50.16, использует clinet2-key и не использует client-key
+
+- Описание ключей и access листов будет одинаковое для master и slave сервера.
+
