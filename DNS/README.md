@@ -309,5 +309,138 @@ web2            IN      A       192.168.50.16
 
 - Выполнить проверку с клиента - обращениек  разным DNS-серверам с разными запросами:
 ```
+[root@client ~]# dig @192.168.50.10 web1.dns.lab
 
+; <<>> DiG 9.11.4-P2-RedHat-9.11.4-26.P2.el7_9.16 <<>> @192.168.50.10 web1.dns.lab
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 55430
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 3
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;web1.dns.lab.                  IN      A
+
+;; ANSWER SECTION:
+web1.dns.lab.           3600    IN      A       192.168.50.15
+
+;; AUTHORITY SECTION:
+dns.lab.                3600    IN      NS      ns02.dns.lab.
+dns.lab.                3600    IN      NS      ns01.dns.lab.
+
+;; ADDITIONAL SECTION:
+ns01.dns.lab.           3600    IN      A       192.168.50.10
+ns02.dns.lab.           3600    IN      A       192.168.50.11
+
+;; Query time: 0 msec
+;; SERVER: 192.168.50.10#53(192.168.50.10)
+;; WHEN: Fri Aug 30 13:23:28 MSK 2024
+;; MSG SIZE  rcvd: 127
 ```
+```
+[root@client2 ~]# dig @192.168.50.11 web2.dns.lab
+
+; <<>> DiG 9.11.4-P2-RedHat-9.11.4-26.P2.el7_9.16 <<>> @192.168.50.11 web2.dns.lab
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 21687
+;; flags: qr aa rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 2, ADDITIONAL: 3
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;web2.dns.lab.                  IN      A
+
+;; ANSWER SECTION:
+web2.dns.lab.           3600    IN      A       192.168.50.16
+
+;; AUTHORITY SECTION:
+dns.lab.                3600    IN      NS      ns02.dns.lab.
+dns.lab.                3600    IN      NS      ns01.dns.lab.
+
+;; ADDITIONAL SECTION:
+ns01.dns.lab.           3600    IN      A       192.168.50.10
+ns02.dns.lab.           3600    IN      A       192.168.50.11
+
+;; Query time: 0 msec
+;; SERVER: 192.168.50.11#53(192.168.50.11)
+;; WHEN: Fri Aug 30 13:25:01 MSK 2024
+;; MSG SIZE  rcvd: 127
+```
+
+- Добавление имён в зону dns.lab с помощью Ansible
+
+>- В существующем Ansible-playbook менять ничего не потребуется, нужно добавить строки с новыми именами в файл [named.dns.lab] и снова запустить Ansible.
+
+- **Создание новой зоны и добавление в неё записей**
+
+- Для того, чтобы прописать на DNS-серверах новую зону необходимо:
+
+- На хосте ns01 добавить зону в файл /etc/named.conf:
+
+```bash
+// lab's newdns zone
+zone "newdns.lab" {
+     type master;
+     allow-transfer { key "zonetransfer.key"; };
+     allow-update { key "zonetransfer.key"; };
+     file "/etc/named/named.newdns.lab";
+};
+```
+
+- На хосте ns02 также добавить зону и указать с какого сервера запрашивать информацию об этой зоне (фрагмент файла /etc/named.conf):
+
+```bash
+// lab's newdns zone
+zone "newdns.lab" {
+    type slave;
+    masters { 192.168.50.10; };
+    file "/etc/named/named.newdns.lab";
+};
+```
+- На хосте ns01 создадим файл /etc/named/named.newdns.lab
+```
+[root@ns01 ~]# vi /etc/named/named.newdns.lab
+$TTL 3600
+$ORIGIN newdns.lab.
+@               IN      SOA     ns01.dns.lab. root.dns.lab. (
+                            2711201407 ; serial
+                            3600       ; refresh (1 hour)
+                            600        ; retry (10 minutes)
+                            86400      ; expire (1 day)
+                            600        ; minimum (10 minutes)
+                        )
+
+                IN      NS      ns01.dns.lab.
+                IN      NS      ns02.dns.lab.
+
+; DNS Servers
+ns01            IN      A       192.168.50.10
+ns02            IN      A       192.168.50.11
+; WWW
+www            IN      A       192.168.50.15
+www            IN      A       192.168.50.16
+```
+
+В конце этого файла добавим записи "www". У файла должны быть права 660, владелец — root, группа — named.
+```
+[root@ns01 ~]# ls -l /etc/named/named.newdns.lab
+-rw-rw----. 1 root named 698 Aug 30 12:08 /etc/named/named.newdns.lab
+```
+- После внесения данных изменений, изменяем значение serial (добавлем +1 к значению 2711201007) и перезапускаем named: systemctl restart named
+
+- Создание новой зоны и добавление в неё записей **с помощью Ansible**. Для создания зоны и добавления в неё записей, нужно добавить зону в файл /etc/named.conf на хостах ns01 [master-named.conf] и ns02 [slave-named.conf ], а также создать файл [named.newdns.lab](named.dns.lab), которые будут копироваться на сервер ns01 и ns02 через playbook.
+- Добавить в модуль copy файл named.newdns.lab [playbook]
+
+```yml
+- name: copy zones
+    copy: src={{ item }} dest=/etc/named/ owner=root group=named mode=0660
+    with_fileglob:
+      - named.d*
+      - named.newdns.lab
+```
+>- Соответственно файл named.newdns.lab будет скопирован на хост ns01 по адресу /etc/named/named.newdns.lab
+
