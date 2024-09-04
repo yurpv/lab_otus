@@ -135,11 +135,15 @@ mysql> FLUSH PRIVILEGES;
 Query OK, 0 rows affected (0.01 sec)
 ```
 
-- Правим в /etc/my.cnf.d/01-base.cnf директиву server-id = 2
+- Дампим базу длā последующего залива на слэйв и игнорируем таблицы по заданию:
+```
+root@master:~# mysqldump --all-databases --triggers --routines --master-data --ignore-table=bet.events_on_demand --ignore-table=bet.v_same_event -uroot -p > /home/vagrant/master.sql
+```
+> На этом настройка Master-а завершена. Файл дампа нужно залить на слейв.
 
-```bash
-SELECT @@server_id;
-
+- Проверяем на slave директиву server-id = 2
+```
+mysql> SELECT @@server_id;
 +-------------+
 | @@server_id |
 +-------------+
@@ -148,28 +152,17 @@ SELECT @@server_id;
 1 row in set (0.00 sec)
 ```
 
-- Раскомментируем в /etc/my.cnf.d/05-binlog.cnf строки
-
-```bash
-#replicate-ignore-table=bet.events_on_demand
-#replicate-ignore-table=bet.v_same_event
-```
-
-> Таким образом указываем таблицы которые будут игнорироваться при репликации
-
 - Заливаем дамп мастера и убеждаемся, что база есть и она без лишних таблиц
+```
+mysql> SOURCE /home/vagrant/master.sql
+Query OK, 0 rows affected (0.00 sec)
 
-```bash
-systemctl start mysql
-cat /var/log/mysqld.log | grep 'root@localhost:' | awk '{print $11}'
-S6;(/Jlg!MrZ
-mysql -uroot -p'S6;(/Jlg!MrZ'
+Query OK, 0 rows affected (0.00 sec)
 
-ALTER USER USER() IDENTIFIED BY 'iGdnT#^7H&Bs';
+Query OK, 0 rows affected (0.00 sec)
+...
 
-SOURCE /vagrant/master.sql
-SHOW DATABASES LIKE 'bet';
-
+mysql> SHOW DATABASES LIKE 'bet';
 +----------------+
 | Database (bet) |
 +----------------+
@@ -177,9 +170,9 @@ SHOW DATABASES LIKE 'bet';
 +----------------+
 1 row in set (0.00 sec)
 
-USE bet;
-SHOW TABLES;
-
+mysql> use bet;
+Database changed
+mysql> SHOW TABLES;
 +---------------+
 | Tables_in_bet |
 +---------------+
@@ -196,29 +189,29 @@ SHOW TABLES;
 
 - Ну и собственно подключаем и запускаем слейв
 
-```bash
-CHANGE MASTER TO MASTER_HOST = "192.168.56.11", MASTER_PORT = 3306, MASTER_USER = "repl", MASTER_PASSWORD = "!OtusLinux2018", MASTER_AUTO_POSITION = 1;
-START SLAVE;
-SHOW SLAVE STATUS\G
+```
+mysql> START SLAVE;
+Query OK, 0 rows affected, 1 warning (0.02 sec)
 
+mysql> SHOW SLAVE STATUS\G
 *************************** 1. row ***************************
-               Slave_IO_State: Waiting for master to send event
-                  Master_Host: 192.168.56.11
+               Slave_IO_State: Waiting for source to send event
+                  Master_Host: 192.168.11.150
                   Master_User: repl
                   Master_Port: 3306
                 Connect_Retry: 60
-              Master_Log_File: mysql-bin.000002
-          Read_Master_Log_Pos: 119864
-               Relay_Log_File: slave-relay-bin.000002
-                Relay_Log_Pos: 119864
-        Relay_Master_Log_File: mysql-bin.000002
+              Master_Log_File: mysql-bin.000006
+          Read_Master_Log_Pos: 1097
+               Relay_Log_File: relay-log-server.000003
+                Relay_Log_Pos: 460
+        Relay_Master_Log_File: mysql-bin.000006
              Slave_IO_Running: Yes
-            Slave_SQL_Running: Yes           
+            Slave_SQL_Running: Yes     
 ```
 
 - Видно что репликация работает, gtid работает и игнорятся таблички по заданию
 
-```bash
+```
                Slave_IO_State: Waiting for master to send event
              Slave_IO_Running: Yes
             Slave_SQL_Running: Yes
