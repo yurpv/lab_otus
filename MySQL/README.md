@@ -139,6 +139,15 @@ Query OK, 0 rows affected (0.01 sec)
 ```
 root@master:~# mysqldump --all-databases --triggers --routines --master-data --ignore-table=bet.events_on_demand --ignore-table=bet.v_same_event -uroot -p > /home/vagrant/master.sql
 ```
+
+- копируем дамп на slave
+
+```
+vagrant plugin install vagrant-scp
+vagrant scp master:/vagrant/master.sql .
+vagrant scp master.sql slave:/vagrant/
+```
+
 > На этом настройка Master-а завершена. Файл дампа нужно залить на слейв.
 
 - Проверяем на slave директиву server-id = 2
