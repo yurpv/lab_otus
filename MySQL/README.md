@@ -212,21 +212,30 @@ mysql> SHOW SLAVE STATUS\G
 - Видно что репликация работает, gtid работает и игнорятся таблички по заданию
 
 ```
-               Slave_IO_State: Waiting for master to send event
-             Slave_IO_Running: Yes
-            Slave_SQL_Running: Yes
-       Replicate_Ignore_Table: bet.events_on_demand,bet.v_same_event
-           Retrieved_Gtid_Set: 000d1310-cba8-11ec-a2f2-5254004d77d3:1
-            Executed_Gtid_Set: 000d1310-cba8-11ec-a2f2-5254004d77d3:1
+    Master_UUID: dad6833f-6ada-11ef-bcf8-000c29621886
+             Master_Info_File: mysql.slave_master_info
+                    SQL_Delay: 0
+          SQL_Remaining_Delay: NULL
+      Slave_SQL_Running_State: Replica has read all relay log; waiting for more updates
+           Master_Retry_Count: 86400
+                  Master_Bind: 
+      Last_IO_Error_Timestamp: 
+     Last_SQL_Error_Timestamp: 
+               Master_SSL_Crl: 
+           Master_SSL_Crlpath: 
+           Retrieved_Gtid_Set: dad6833f-6ada-11ef-bcf8-000c29621886:40-43
+            Executed_Gtid_Set: dad6833f-6ada-11ef-bcf8-000c29621886:1-43
 ```
 
 - Проверим репликацю в действии. На мастере
 
-```bash
-USE bet;
-INSERT INTO bookmaker (id,bookmaker_name) VALUES(1,'1xbet');
-SELECT * FROM bookmaker;
+```
+mysql> USE bet;
+Database changed
+mysql> INSERT INTO bookmaker (id,bookmaker_name) VALUES(1,'1xbet');
+Query OK, 1 row affected (0.00 sec)
 
+mysql> SELECT * FROM bookmaker;
 +----+----------------+
 | id | bookmaker_name |
 +----+----------------+
@@ -241,9 +250,8 @@ SELECT * FROM bookmaker;
 
 - На слейве
 
-```bash
-SELECT * FROM bookmaker;
-
+```
+mysql> SELECT * FROM bookmaker;
 +----+----------------+
 | id | bookmaker_name |
 +----+----------------+
@@ -258,17 +266,24 @@ SELECT * FROM bookmaker;
 
 - В binlog-ах на cлейве также видно последнее изменение, туда же он пишет информацию о GTID
 
-```bash
-SHOW BINLOG EVENTS;
-+------------------+-----+----------------+-----------+-------------+------------------------------------------------------------------------+
-| Log_name         | Pos | Event_type     | Server_id | End_log_pos | Info                                                                   |
-+------------------+-----+----------------+-----------+-------------+------------------------------------------------------------------------+
-| mysql-bin.000001 |   4 | Format_desc    |         2 |         123 | Server ver: 5.7.37-40-log, Binlog ver: 4                               |
-| mysql-bin.000001 | 123 | Previous_gtids |         2 |         154 |                                                                        |
-| mysql-bin.000001 | 154 | Gtid           |         1 |         219 | SET @@SESSION.GTID_NEXT= '000d1310-cba8-11ec-a2f2-5254004d77d3:2'     |
-| mysql-bin.000001 | 219 | Query          |         1 |         292 | BEGIN                                                                  |
-| mysql-bin.000001 | 292 | Query          |         1 |         419 | use `bet`; INSERT INTO bookmaker (id,bookmaker_name) VALUES(1,'1xbet') |
-| mysql-bin.000001 | 419 | Xid            |         1 |         450 | COMMIT /* xid=1221 */                                                  |
-+------------------+-----+----------------+-----------+-------------+------------------------------------------------------------------------+
-6 rows in set (0.00 sec)
+```
+mysql> SHOW BINLOG EVENTS;
++------------------+-----+----------------+-----------+-------------+--------------------------------------+
+| Log_name         | Pos | Event_type     | Server_id | End_log_pos | Info                                 |
++------------------+-----+----------------+-----------+-------------+--------------------------------------+
+| mysql-bin.000001 |   4 | Format_desc    |         2 |         126 | Server ver: 8.0.37-29, Binlog ver: 4 |
+| mysql-bin.000001 | 126 | Previous_gtids |         2 |         157 |                                      |
+| mysql-bin.000001 | 157 | Stop           |         2 |         180 |                                      |
++------------------+-----+----------------+-----------+-------------+--------------------------------------+
+3 rows in set (0.00 sec)
+```
+
+> При выполнении команд mysql> START SLAVE; mysql> SHOW SLAVE STATUS\G отчет выдал ошибку:
+
+
+
+> Для ее устранения нужно выполнить команду на master и slave
+```
+mysql> CHANGE MASTER TO GET_MASTER_PUBLIC_KEY=1;
+Query OK, 0 rows affected, 2 warnings (0.01 sec)
 ```
