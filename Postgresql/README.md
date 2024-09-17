@@ -254,3 +254,77 @@ master                     : ok=21   changed=5    unreachable=0    failed=0    s
 slave                      : ok=16   changed=6    unreachable=0    failed=0    skipped=21   rescued=0    ignored=0   
 
 ```
+
+-  Проверяем параметры подключения в файле на master и slave /etc/postgresql/16/main/pg_hba.conf
+```
+root@master:~# cat /etc/postgresql/16/main/pg_hba.conf
+# PostgreSQL Client Authentication Configuration File
+#
+# Database administrative login by Unix domain socket
+local   all             postgres                               trust 
+
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+# "local" is for Unix domain socket connections only
+local   all             all                                          trust
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            scram-sha-256
+# IPv6 local connections:
+host    all             all             ::1/128                 scram-sha-256
+# Allow replication connections from localhost, by a user with the
+# replication privilege.
+local   replication     all                                     peer
+host    replication     all             127.0.0.1/32            scram-sha-256
+host    replication     all             ::1/128                 scram-sha-256
+host    replication     replication     192.168.57.11/32        scram-sha-256
+host    replication     replication     192.168.57.12/32        scram-sha-256
+host    all             barman          192.168.57.13/32        scram-sha-256
+host    replication     barman          192.168.57.13/32        scram-sha-256
+```
+```
+root@slave:~# cat /etc/postgresql/16/main/pg_hba.conf
+# PostgreSQL Client Authentication Configuration File
+#
+# Database administrative login by Unix domain socket
+local   all             postgres                               trust 
+
+# TYPE  DATABASE        USER            ADDRESS                 METHOD
+
+# "local" is for Unix domain socket connections only
+local   all             all                                          trust
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            scram-sha-256
+# IPv6 local connections:
+host    all             all             ::1/128                 scram-sha-256
+# Allow replication connections from localhost, by a user with the
+# replication privilege.
+local   replication     all                                     peer
+host    replication     all             127.0.0.1/32            scram-sha-256
+host    replication     all             ::1/128                 scram-sha-256
+```
+
+### Проверка репликации: 
+
+- На хосте master в psql проверяем список БД:
+```
+root@master:~# sudo psql -U postgres
+psql (16.4 (Ubuntu 16.4-1.pgdg22.04+1))
+Type "help" for help.
+
+postgres=# \l
+                                                       List of databases
+   Name    |  Owner   | Encoding | Locale Provider |   Collate   |    Ctype    | ICU Locale | ICU Rules |   Access privileges   
+-----------+----------+----------+-----------------+-------------+-------------+------------+-----------+-----------------------
+ demo      | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | 
+ postgres  | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | 
+ template0 | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | =c/postgres          +
+           |          |          |                 |             |             |            |           | postgres=CTc/postgres
+ template1 | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | =c/postgres          +
+           |          |          |                 |             |             |            |           | postgres=CTc/postgres
+(4 rows)
+```
+
+- На хосте slave также в psql также проверим список БД (команда \l), в списке БД должна появится БД demo.
+```
+
+```
