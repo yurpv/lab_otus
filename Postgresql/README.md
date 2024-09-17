@@ -651,3 +651,104 @@ Processing xlog segments from streaming for master
 2024-09-17 09:31:32,854 [1710] barman.wal_archiver INFO: No xlog segments found from streaming for master.
 ```
 
+### Проверка восстановления из бекапов:
+
+- На хосте master в psql удаляем базы demo:
+```
+root@master:~# sudo psql -U postgres
+psql (16.4 (Ubuntu 16.4-1.pgdg22.04+1))
+Type "help" for help.
+
+postgres=# \l
+                                                       List of databases
+   Name    |  Owner   | Encoding | Locale Provider |   Collate   |    Ctype    | ICU Locale | ICU Rules |   Access privileges   
+-----------+----------+----------+-----------------+-------------+-------------+------------+-----------+-----------------------
+ demo      | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | 
+ postgres  | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | 
+ template0 | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | =c/postgres          +
+           |          |          |                 |             |             |            |           | postgres=CTc/postgres
+ template1 | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | =c/postgres          +
+           |          |          |                 |             |             |            |           | postgres=CTc/postgres
+(4 rows)
+
+postgres=# drop database demo;
+DROP DATABASE
+postgres=# \l
+                                                       List of databases
+   Name    |  Owner   | Encoding | Locale Provider |   Collate   |    Ctype    | ICU Locale | ICU Rules |   Access privileges   
+-----------+----------+----------+-----------------+-------------+-------------+------------+-----------+-----------------------
+ postgres  | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | 
+ template0 | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | =c/postgres          +
+           |          |          |                 |             |             |            |           | postgres=CTc/postgres
+ template1 | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | =c/postgres          +
+           |          |          |                 |             |             |            |           | postgres=CTc/postgres
+(3 rows)
+```
+
+- Далее на хосте barman запустим восстановление: 
+```
+root@barman:~# barman recover master 20240917T083600 /var/lib/postgresql/16/main --remote-ssh-comman "ssh postgres@192.168.57.11"
+2024-09-17 09:49:54,606 [1886] barman.utils WARNING: Failed opening the requested log file. Using standard error instead.
+2024-09-17 09:49:54,613 [1886] barman.wal_archiver INFO: No xlog segments found from streaming for master.
+The authenticity of host '192.168.57.11 (192.168.57.11)' can't be established.
+ED25519 key fingerprint is SHA256:Wzrh93zwh0VpURrHouAs/R+Kg+iSOF84bI0bbHS3MgQ.
+This key is not known by any other names
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+2024-09-17 09:50:17,908 [1886] Command WARNING: Warning: Permanently added '192.168.57.11' (ED25519) to the list of known hosts.
+Starting remote restore for server master using backup 20240917T083600
+2024-09-17 09:50:18,524 [1886] barman.recovery_executor INFO: Starting remote restore for server master using backup 20240917T083600
+Destination directory: /var/lib/postgresql/16/main
+2024-09-17 09:50:18,525 [1886] barman.recovery_executor INFO: Destination directory: /var/lib/postgresql/16/main
+Remote command: ssh postgres@192.168.57.11
+2024-09-17 09:50:18,525 [1886] barman.recovery_executor INFO: Remote command: ssh postgres@192.168.57.11
+2024-09-17 09:50:18,679 [1886] barman.recovery_executor WARNING: Unable to retrieve safe horizon time for smart rsync copy: The /var/lib/postgresql/16/main/.barman-recover.info file does not exist
+Copying the base backup.
+2024-09-17 09:50:18,979 [1886] barman.recovery_executor INFO: Copying the base backup.
+2024-09-17 09:50:18,981 [1886] barman.copy_controller INFO: Copy started (safe before None)
+2024-09-17 09:50:18,981 [1886] barman.copy_controller INFO: Copy step 1 of 4: [global] analyze PGDATA directory: /var/lib/barman/master/base/20240917T083600/data/
+2024-09-17 09:50:19,219 [1886] barman.copy_controller INFO: Copy step 2 of 4: [global] create destination directories and delete unknown files for PGDATA directory: /var/lib/barman/master/base/20240917T083600/data/
+2024-09-17 09:50:19,446 [1909] barman.copy_controller INFO: Copy step 3 of 4: [bucket 0] starting copy safe files from PGDATA directory: /var/lib/barman/master/base/20240917T083600/data/
+2024-09-17 09:50:19,801 [1909] barman.copy_controller INFO: Copy step 3 of 4: [bucket 0] finished (duration: less than one second) copy safe files from PGDATA directory: /var/lib/barman/master/base/20240917T083600/data/
+2024-09-17 09:50:19,803 [1909] barman.copy_controller INFO: Copy step 4 of 4: [bucket 0] starting copy files with checksum from PGDATA directory: /var/lib/barman/master/base/20240917T083600/data/
+2024-09-17 09:50:19,999 [1909] barman.copy_controller INFO: Copy step 4 of 4: [bucket 0] finished (duration: less than one second) copy files with checksum from PGDATA directory: /var/lib/barman/master/base/20240917T083600/data/
+2024-09-17 09:50:20,000 [1886] barman.copy_controller INFO: Copy finished (safe before None)
+Copying required WAL segments.
+2024-09-17 09:50:20,513 [1886] barman.recovery_executor INFO: Copying required WAL segments.
+2024-09-17 09:50:20,514 [1886] barman.recovery_executor INFO: Starting copy of 15 WAL files 15/15 from WalFileInfo(compression='gzip', name='00000001000000000000001A', size=16466, time=1726551360.9771612) to WalFileInfo(compression='gzip', name='000000010000000000000028', size=16483, time=1726555172.7286253)
+2024-09-17 09:50:24,781 [1886] barman.recovery_executor INFO: Finished copying 15 WAL files.
+Generating archive status files
+2024-09-17 09:50:24,782 [1886] barman.recovery_executor INFO: Generating archive status files
+Identify dangerous settings in destination directory.
+2024-09-17 09:50:25,284 [1886] barman.recovery_executor INFO: Identify dangerous settings in destination directory.
+Recovery completed (start time: 2024-09-17 09:50:18.523656+03:00, elapsed time: 6 seconds)
+Your PostgreSQL server has been successfully prepared for recovery!
+```
+
+- Далее на хосте master потребуется перезапустить postgresql-сервер и снова проверить список БД. База demo должна вернуться..
+```
+root@master:~# systemctl status postgresql
+● postgresql.service - PostgreSQL RDBMS
+     Loaded: loaded (/lib/systemd/system/postgresql.service; enabled; vendor preset: enabled)
+     Active: active (exited) since Tue 2024-09-17 09:51:11 MSK; 10s ago
+    Process: 65804 ExecStart=/bin/true (code=exited, status=0/SUCCESS)
+   Main PID: 65804 (code=exited, status=0/SUCCESS)
+        CPU: 3ms
+
+Sep 17 09:51:11 master systemd[1]: Starting PostgreSQL RDBMS...
+Sep 17 09:51:11 master systemd[1]: Finished PostgreSQL RDBMS.
+root@master:~# sudo psql -U postgres
+psql (16.4 (Ubuntu 16.4-1.pgdg22.04+1))
+Type "help" for help.
+
+postgres=# \l
+                                                       List of databases
+   Name    |  Owner   | Encoding | Locale Provider |   Collate   |    Ctype    | ICU Locale | ICU Rules |   Access privileges   
+-----------+----------+----------+-----------------+-------------+-------------+------------+-----------+-----------------------
+ demo      | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | 
+ postgres  | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | 
+ template0 | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | =c/postgres          +
+           |          |          |                 |             |             |            |           | postgres=CTc/postgres
+ template1 | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | =c/postgres          +
+           |          |          |                 |             |             |            |           | postgres=CTc/postgres
+(4 rows)
+```
