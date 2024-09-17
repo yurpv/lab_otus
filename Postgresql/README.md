@@ -343,3 +343,73 @@ postgres=# \l
            |          |          |                 |             |             |            |           | postgres=CTc/postgres
 (3 rows)
 ```
+
+- Также можно проверить репликацию другим способом: 
+На хосте master в psql вводим команду: select * from pg_stat_replication;
+На хосте slave в psql вводим команду: select * from pg_stat_wal_receiver;
+Вывод обеих команд должен быть не пустым. 
+```
+postgres=# select * from pg_stat_replication;
+-[ RECORD 1 ]----+------------------------------
+pid              | 65805
+usesysid         | 16384
+usename          | replication
+application_name | 16/main
+client_addr      | 192.168.57.12
+client_hostname  | 
+client_port      | 33952
+backend_start    | 2024-09-17 09:51:13.784037+03
+backend_xmin     | 
+state            | streaming
+sent_lsn         | 0/290000D8
+write_lsn        | 0/290000D8
+flush_lsn        | 0/290006E8
+replay_lsn       | 0/290006E8
+write_lag        | 00:00:00.001052
+flush_lag        | 00:00:00.001052
+replay_lag       | 00:00:00.001052
+sync_priority    | 0
+sync_state       | async
+reply_time       | 2024-09-17 09:54:24.536475+03
+-[ RECORD 2 ]----+------------------------------
+pid              | 65814
+usesysid         | 16385
+usename          | barman
+application_name | barman_receive_wal
+client_addr      | 192.168.57.13
+client_hostname  | 
+client_port      | 41148
+backend_start    | 2024-09-17 09:52:01.672454+03
+backend_xmin     | 
+state            | streaming
+sent_lsn         | 0/290000D8
+write_lsn        | 0/290000D8
+flush_lsn        | 0/29000000
+replay_lsn       | 
+write_lag        | 00:00:10.009961
+flush_lag        | 00:02:20.130624
+replay_lag       | 00:02:20.130624
+sync_priority    | 0
+sync_state       | async
+reply_time       | 2024-09-17 09:54:21.850501+03
+```
+```
+postgres=# select * from pg_stat_wal_receiver;
+-[ RECORD 1 ]---------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+pid                   | 63660
+status                | streaming
+receive_start_lsn     | 0/29000000
+receive_start_tli     | 1
+written_lsn           | 0/290000D8
+flushed_lsn           | 0/29000000
+received_tli          | 1
+last_msg_send_time    | 2024-09-17 09:55:17.730047+03
+last_msg_receipt_time | 2024-09-17 09:55:17.712382+03
+latest_end_lsn        | 0/290000D8
+latest_end_time       | 2024-09-17 09:54:47.717219+03
+slot_name             | 
+sender_host           | 192.168.57.11
+sender_port           | 5432
+conninfo              | user=replication password=******** channel_binding=prefer dbname=replication host=192.168.57.11 port=5432 fallback_application_name=16/main sslmode=prefer sslcompression=0 sslcertmode=allow sslsni=1 ssl_min_protocol_version=TLSv1.2 gssencmode=prefer krbsrvname=postgres gssdelegation=0 target_session_attrs=any load_balance_hosts=disable
+```
+> На этом настройка репликации завершена. 
