@@ -55,6 +55,7 @@ Bringing machine 'barman' up with 'vmware_desktop' provider...
 ```
 
 <details><summary>ansible-playbook postgresql.yaml</summary>
+    
 ```
 Postrgresql % ansible-playbook postgresql.yaml                        
 
