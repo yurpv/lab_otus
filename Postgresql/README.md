@@ -1,1 +1,69 @@
+# Postgresql
+Для лабораторных работ использую Macbook Air M2 чипсет amr64, OS Sonoma 14.6.1, система виртуализации VMware Fusion, при выполнении лабораторной работы использовал образ vagrantbox bento/ubuntu-22.04.
+
+## Цель домашнего задания
+Научиться настраивать репликацию и создавать резервные копии в СУБД PostgreSQL
+
+- Цель
+1) Настроить hot_standby репликацию с использованием слотов
+2) Настроить правильное резервное копирование
+
+## Что нужно сделать?
+В материалах приложены ссылки на вагрант для репликации и дамп базы bet.dmp
+
+Базу развернуть на мастере и настроить так, чтобы реплицировались таблицы:
+```
+| bookmaker   |
+| competition |
+| market      |
+| odds        |
+| outcome     |
+```
+Настроить GTID репликацию
+
+## Выполнение
+
+- Разворачиваем виртуалки в Vagrant (master,slave,barman) с помощью Ansible устанавливаем postgresql 16 и barman 3.* версии и донастроиваем сервера.
+
+```
+Postrgresql % vagrant up
+Bringing machine 'master' up with 'vmware_desktop' provider...
+Bringing machine 'slave' up with 'vmware_desktop' provider...
+Bringing machine 'barman' up with 'vmware_desktop' provider...
+==> master: Checking if box 'bento/ubuntu-22.04' version '202401.31.0' is up to date...
+==> master: Verifying vmnet devices are healthy...
+==> master: Starting the VMware VM...
+==> master: Waiting for the VM to receive an address...
+==> master: Forwarding ports...
+    master: -- 22 => 2222
+==> master: Waiting for machine to boot. This may take a few minutes...
+    master: SSH address: 172.16.203.171:22
+    master: SSH username: vagrant
+    master: SSH auth method: password
+==> master: Machine booted and ready!
+==> slave: Checking if box 'bento/ubuntu-22.04' version '202401.31.0' is up to date...
+==> slave: Verifying vmnet devices are healthy...
+==> slave: Fixed port collision for 22 => 2222. Now on port 2200.
+==> slave: Starting the VMware VM...
+==> slave: Waiting for the VM to receive an address...
+==> slave: Forwarding ports...
+    slave: -- 22 => 2200
+==> slave: Waiting for machine to boot. This may take a few minutes...
+    slave: SSH address: 172.16.203.172:22
+    slave: SSH username: vagrant
+    slave: SSH auth method: password
+==> slave: Machine booted and ready!
+==> barman: Checking if box 'bento/ubuntu-22.04' version '202401.31.0' is up to date...
+==> barman: Verifying vmnet devices are healthy...
+==> barman: Fixed port collision for 22 => 2222. Now on port 2201.
+==> barman: Starting the VMware VM...
+==> barman: Waiting for the VM to receive an address...
+==> barman: Forwarding ports...
+    barman: -- 22 => 2201
+==> barman: Waiting for machine to boot. This may take a few minutes...
+    barman: SSH address: 172.16.203.173:22
+    barman: SSH username: vagrant
+    barman: SSH auth method: password
+==> barman: Machine booted and ready!
+```
 
