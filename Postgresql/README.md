@@ -412,4 +412,137 @@ sender_host           | 192.168.57.11
 sender_port           | 5432
 conninfo              | user=replication password=******** channel_binding=prefer dbname=replication host=192.168.57.11 port=5432 fallback_application_name=16/main sslmode=prefer sslcompression=0 sslcertmode=allow sslsni=1 ssl_min_protocol_version=TLSv1.2 gssencmode=prefer krbsrvname=postgres gssdelegation=0 target_session_attrs=any load_balance_hosts=disable
 ```
-> На этом настройка репликации завершена. 
+> На этом настройка репликации завершена.
+
+## Настройка резервного копирования
+
+- на сервере Barman проверить настройки, что корректно отработал ansible-playbook
+- Проверяем возможность подключения к postgres-серверу:
+```
+root@barman:~# psql -h 192.168.57.11 -U barman -d postgres
+Password for user barman: 
+psql (16.4 (Ubuntu 16.4-1.pgdg22.04+1))
+SSL connection (protocol: TLSv1.3, cipher: TLS_AES_256_GCM_SHA384, compression: off)
+Type "help" for help.
+
+postgres=# \q
+```
+
+- Проверяем репликацию:
+```
+root@barman:~# psql -h 192.168.57.11 -U barman -c "IDENTIFY_SYSTEM" replication=1
+Password for user barman: 
+      systemid       | timeline |  xlogpos   | dbname 
+---------------------+----------+------------+--------
+ 7414071698640789983 |        1 | 0/2C000148 | 
+(1 row)
+```
+
+- Смотрим конфиг Barman:
+<details><summary>/etc/barman.conf</summary>
+```
+root@barman:~# cat /etc/barman.conf
+; Barman, Backup and Recovery Manager for PostgreSQL
+; http://www.pgbarman.org/ - http://www.enterprisedb.com/
+;
+; Main configuration file
+
+[barman]
+; System user
+barman_user = barman
+
+; Directory of configuration files. Place your sections in separate files with .conf extension
+; For example place the 'main' server section in /etc/barman.d/main.conf
+configuration_files_directory = /etc/barman.d
+
+; Main directory
+barman_home = /var/lib/barman
+
+; Locks directory - default: %(barman_home)s
+;barman_lock_directory = /var/run/barman
+
+; Log location
+log_file = /var/log/barman/barman.log
+
+; Log level (see https://docs.python.org/3/library/logging.html#levels)
+log_level = INFO
+
+; Default compression level: possible values are None (default), bzip2, gzip, pigz, pygzip or pybzip2
+compression = gzip
+backup_method = rsync
+archiver = on
+
+; Pre/post backup hook scripts
+;pre_backup_script = env | grep ^BARMAN
+;pre_backup_retry_script = env | grep ^BARMAN
+;post_backup_retry_script = env | grep ^BARMAN
+;post_backup_script = env | grep ^BARMAN
+
+; Pre/post archive hook scripts
+;pre_archive_script = env | grep ^BARMAN
+;pre_archive_retry_script = env | grep ^BARMAN
+;post_archive_retry_script = env | grep ^BARMAN
+;post_archive_script = env | grep ^BARMAN
+
+; Pre/post delete scripts
+;pre_delete_script = env | grep ^BARMAN
+;pre_delete_retry_script = env | grep ^BARMAN
+;post_delete_retry_script = env | grep ^BARMAN
+;post_delete_script = env | grep ^BARMAN
+
+; Pre/post wal delete scripts
+;pre_wal_delete_script = env | grep ^BARMAN
+;pre_wal_delete_retry_script = env | grep ^BARMAN
+;post_wal_delete_retry_script = env | grep ^BARMAN
+;post_wal_delete_script = env | grep ^BARMAN
+
+; Global bandwidth limit in kilobytes per second - default 0 (meaning no limit)
+;bandwidth_limit = 4000
+
+; Number of parallel jobs for backup and recovery via rsync (default 1)
+parallel_jobs = 1
+
+; Immediate checkpoint for backup command - default false
+immediate_checkpoint = true
+
+; Enable network compression for data transfers - default false
+;network_compression = false
+
+; Number of retries of data copy during base backup after an error - default 0
+basebackup_retry_times = 333
+
+; Number of seconds of wait after a failed copy, before retrying - default 30
+;basebackup_retry_sleep = 30
+
+; Maximum execution time, in seconds, per server
+; for a barman check command - default 30
+;check_timeout = 30
+
+; Time frame that must contain the latest backup date.
+; If the latest backup is older than the time frame, barman check
+; command will report an error to the user.
+; If empty, the latest backup is always considered valid.
+; Syntax for this option is: "i (DAYS | WEEKS | MONTHS | HOURS)" where i is an
+; integer > 0 which identifies the number of days | weeks | months of
+; validity of the latest backup for this check. Also known as 'smelly backup'.
+last_backup_maximum_age = 4 DAYS
+
+; Time frame that must contain the latest WAL file
+; If the latest WAL file is older than the time frame, barman check
+; command will report an error to the user.
+; Syntax for this option is: "i (DAYS | WEEKS | MONTHS | HOURS)" where i is an
+; integer > 0
+;last_wal_maximum_age =
+
+; Minimum number of required backups (redundancy)
+minimum_redundancy = 1
+
+; Global retention policy (REDUNDANCY or RECOVERY WINDOW)
+; Examples of retention policies
+; Retention policy (disabled, default)
+; Retention policy (based on redundancy)
+; Retention policy (based on recovery window)
+retention_policy = REDUNDANCY 3
+retention_policy = RECOVERY WINDOW OF 4 WEEKS
+```
+</details>
