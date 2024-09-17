@@ -573,3 +573,81 @@ streaming_conninfo = host=192.168.57.11 user=barman
 backup_method = postgres
 archiver = off
 ```
+
+- На этом настройка бекапа завершена. Теперь проверим работу barman:
+```
+root@barman:~# barman switch-wal master
+The WAL file 000000010000000000000015 has been closed on server 'master'
+2024-09-17 08:13:56,024 [69474] barman.server INFO: The WAL file 000000010000000000000015 has been closed on server 'master'
+```
+```
+root@barman:~# barman cron
+Starting WAL archiving for server master
+```
+```
+root@barman:~# barman check master
+2024-09-17 08:02:07,584 [69352] barman.utils WARNING: Failed opening the requested log file. Using standard error instead.
+Server master:
+        PostgreSQL: OK
+        superuser or standard user with backup privileges: OK
+        PostgreSQL streaming: OK
+        wal_level: OK
+        replication slot: OK
+        directories: OK
+        retention policy settings: OK
+        backup maximum age: FAILED (interval provided: 4 days, latest backup age: No available backups)
+        backup minimum size: OK (0 B)
+        wal maximum age: OK (no last_wal_maximum_age provided)
+        wal size: OK (0 B)
+        compression settings: OK
+        failed backups: OK (there are 0 failed backups)
+        minimum redundancy requirements: FAILED (have 0 backups, expected at least 1)
+        pg_basebackup: OK
+        pg_basebackup compatible: OK
+        pg_basebackup supports tablespaces mapping: OK
+        systemid coherence: OK (no system Id stored on disk)
+        pg_receivexlog: OK
+        pg_receivexlog compatible: OK
+        receive-wal running: OK
+        archiver errors: OK
+```
+> Если во всех пунктах, кроме выделенных будет OK, значит бекап отработает корректно. Если в остальных пунктах вы видите FAILED, то бекап у вас не запустится. Требуется посмотреть в логах, в чём может быть проблема...
+
+- После этого запускаем резервную копию: 
+```
+root@barman:~# barman backup master
+Starting backup using postgres method for server master in /var/lib/barman/master/base/20240917T093131
+2024-09-17 09:31:31,518 [1710] barman.backup INFO: Starting backup using postgres method for server master in /var/lib/barman/master/base/20240917T093131
+Backup start at LSN: 0/240000C8 (000000010000000000000024, 000000C8)
+2024-09-17 09:31:31,526 [1710] barman.backup_executor INFO: Backup start at LSN: 0/240000C8 (000000010000000000000024, 000000C8)
+Starting backup copy via pg_basebackup for 20240917T093131
+2024-09-17 09:31:31,526 [1710] barman.backup_executor INFO: Starting backup copy via pg_basebackup for 20240917T093131
+2024-09-17 09:31:31,555 [1710] barman.backup_executor INFO: pg_basebackup: initiating base backup, waiting for checkpoint to complete
+2024-09-17 09:31:31,642 [1710] barman.backup_executor INFO: pg_basebackup: checkpoint completed
+2024-09-17 09:31:32,321 [1710] barman.backup_executor INFO: NOTICE:  WAL archiving is not enabled; you must ensure that all required WAL segments are copied through other means to complete the backup
+2024-09-17 09:31:32,324 [1710] barman.backup_executor INFO: pg_basebackup: syncing data to disk ...
+2024-09-17 09:31:32,615 [1710] barman.backup_executor INFO: pg_basebackup: renaming backup_manifest.tmp to backup_manifest
+2024-09-17 09:31:32,615 [1710] barman.backup_executor INFO: pg_basebackup: base backup completed
+2024-09-17 09:31:32,616 [1710] barman.backup_executor INFO: 
+Copy done (time: 1 second)
+2024-09-17 09:31:32,617 [1710] barman.backup_executor INFO: Copy done (time: 1 second)
+Finalising the backup.
+2024-09-17 09:31:32,617 [1710] barman.backup_executor INFO: Finalising the backup.
+2024-09-17 09:31:32,629 [1710] barman.postgres INFO: Restore point 'barman_20240917T093131' successfully created
+Backup size: 29.4 MiB
+2024-09-17 09:31:32,652 [1710] barman.backup INFO: Backup size: 29.4 MiB
+Backup end at LSN: 0/26000000 (000000010000000000000025, 00000000)
+2024-09-17 09:31:32,652 [1710] barman.backup INFO: Backup end at LSN: 0/26000000 (000000010000000000000025, 00000000)
+Backup completed (start time: 2024-09-17 09:31:31.526928, elapsed time: 1 second)
+2024-09-17 09:31:32,652 [1710] barman.backup INFO: Backup completed (start time: 2024-09-17 09:31:31.526928, elapsed time: 1 second)
+Waiting for the WAL file 000000010000000000000025 from server 'master'
+2024-09-17 09:31:32,652 [1710] barman.server INFO: Waiting for the WAL file 000000010000000000000025 from server 'master'
+2024-09-17 09:31:32,653 [1710] barman.wal_archiver INFO: Found 2 xlog segments from streaming for master. Archive all segments in one run.
+Processing xlog segments from streaming for master
+        000000010000000000000024
+2024-09-17 09:31:32,653 [1710] barman.wal_archiver INFO: Archiving segment 1 of 2 from streaming: master/000000010000000000000024
+        000000010000000000000025
+2024-09-17 09:31:32,762 [1710] barman.wal_archiver INFO: Archiving segment 2 of 2 from streaming: master/000000010000000000000025
+2024-09-17 09:31:32,854 [1710] barman.wal_archiver INFO: No xlog segments found from streaming for master.
+```
+
