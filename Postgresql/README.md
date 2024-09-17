@@ -440,6 +440,7 @@ Password for user barman:
 
 - Смотрим конфиг Barman:
 <details><summary>/etc/barman.conf</summary>
+    
 ```
 root@barman:~# cat /etc/barman.conf
 ; Barman, Backup and Recovery Manager for PostgreSQL
@@ -546,3 +547,29 @@ retention_policy = REDUNDANCY 3
 retention_policy = RECOVERY WINDOW OF 4 WEEKS
 ```
 </details>
+
+- Смотрим /etc/barman.d/master
+```
+root@barman:~# cat /etc/barman.d/master.conf 
+[master]
+#Описание задания
+description = "backup master"
+#Команда подключения к хосту master
+ssh_command = ssh postgres@192.168.57.11
+#Команда для подключения к postgres-серверу
+conninfo = host=192.168.57.11 user=barman port=5432 dbname=postgres
+retention_policy_mode = auto
+retention_policy = RECOVERY WINDOW OF 7 days
+wal_retention_policy = main
+streaming_archiver=on
+#Указание префикса, который будет использоваться как $PATH на хосте master
+#path_prefix = /usr/local/pgsql/bin
+#настройки слота
+create_slot = auto
+slot_name = master
+#Команда для потоковой передачи от postgres-сервера
+streaming_conninfo = host=192.168.57.11 user=barman
+#Тип выполняемого бекапа
+backup_method = postgres
+archiver = off
+```
