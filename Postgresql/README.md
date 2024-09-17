@@ -254,6 +254,7 @@ master                     : ok=21   changed=5    unreachable=0    failed=0    s
 slave                      : ok=16   changed=6    unreachable=0    failed=0    skipped=21   rescued=0    ignored=0   
 
 ```
+</details>
 
 -  Проверяем параметры подключения в файле на master и slave /etc/postgresql/16/main/pg_hba.conf
 ```
@@ -326,5 +327,19 @@ postgres=# \l
 
 - На хосте slave также в psql также проверим список БД (команда \l), в списке БД должна появится БД demo.
 ```
+root@slave:~# sudo psql -U postgres
+psql (16.4 (Ubuntu 16.4-1.pgdg22.04+1))
+Type "help" for help.
 
+postgres=# \l
+                                                       List of databases
+   Name    |  Owner   | Encoding | Locale Provider |   Collate   |    Ctype    | ICU Locale | ICU Rules |   Access privileges   
+-----------+----------+----------+-----------------+-------------+-------------+------------+-----------+-----------------------
+ demo      | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | 
+ postgres  | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | 
+ template0 | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | =c/postgres          +
+           |          |          |                 |             |             |            |           | postgres=CTc/postgres
+ template1 | postgres | UTF8     | libc            | en_US.UTF-8 | en_US.UTF-8 |            |           | =c/postgres          +
+           |          |          |                 |             |             |            |           | postgres=CTc/postgres
+(3 rows)
 ```
