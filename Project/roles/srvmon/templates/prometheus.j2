@@ -1,0 +1,60 @@
+server {
+        listen 80 default_server;
+        server_name _;
+        return 301 https://$host$request_uri;
+}
+
+server {
+        listen *:443 ssl;
+        server_name prometheus.home.ru;
+        ssl_certificate /etc/nginx/ssl/prometheus.crt;
+        ssl_certificate_key /etc/nginx/ssl/prometheus.key;
+        ssl_dhparam /etc/nginx/ssl/dhparam.pem;
+        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+        location / {
+                proxy_pass http://127.0.0.1:9090;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_cache_bypass $http_upgrade;
+        }
+}
+
+server {
+        listen *:443 ssl;
+        server_name grafana.home.ru;
+        ssl_certificate /etc/nginx/ssl/grafana.crt;
+        ssl_certificate_key /etc/nginx/ssl/grafana.key;
+        ssl_dhparam /etc/nginx/ssl/dhparam.pem;
+        ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+        location / {
+                proxy_pass http://127.0.0.1:3000;
+                proxy_http_version 1.1;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_cache_bypass $http_upgrade;
+        }
+
+}
+
+server {
+        listen *:443 ssl;
+        server_name alertmanager.home.ru;
+        ssl_certificate /etc/nginx/ssl/alertmanager.crt;
+        ssl_certificate_key /etc/nginx/ssl/alertmanager.key;
+        ssl_dhparam /etc/nginx/ssl/dhparam.pem;
+        ssl_protocols SSLv3 TLSv1 TLSv1.1 TLSv1.2;
+        location / {
+                proxy_pass http://127.0.0.1:9093;
+                proxy_http_version 1.1;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection 'upgrade';
+                proxy_set_header Host $host;
+                proxy_cache_bypass $http_upgrade;
+        }
+
+}
