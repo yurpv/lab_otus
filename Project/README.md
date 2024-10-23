@@ -23,52 +23,59 @@
 
 ### Состав проекта
 
-- Всего: 8 хостов. 
-- Метод разворачивания: Ansible.
-- На хостах включен файрвол (Firewalld):
+- Всего: 7 хостов. 
+- Метод разворачивания: Vagrant, Ansible.
+- На хостах включен файрвол (UFW):
 	- Настроены необходимые службы и порты.
-- На хостах включен SELinux:
+- На хостах выключен SELinux:
 	- Настроены необходимые контексты.
 - Все хосты выходят из локальной сети через хост Router.
+- Для мониторинга используется Prometheus + Alertmanager, для оповещения используется telegam
+- За визуалтзацию отвечает grafana
+
+<img width="1014" alt="image" src="https://github.com/user-attachments/assets/12b19fcd-300d-4e73-9e63-1729dd045d51">
+
+<img width="498" alt="image" src="https://github.com/user-attachments/assets/0d49d125-29ef-4c83-bc91-d893ae4601e1">
+
+<img width="1356" alt="image" src="https://github.com/user-attachments/assets/2d41b5e6-4236-417e-a07a-bca31840e48a">
 
 
-> Данное решение не является продакшн решением, а несет смысл демонстрации знаний полученных на курсе. 
-
-> В данном проекте не рассмотрены проблемы отказоустойчивости.
 
 ### Хосты
 
 Name | IP адрес
 ------| ---------
 Router | 192.168.255.10
-WEB ) | 192.168.255.20
-MySQL (MASTER) | 192.168.255.30
-MySQL (SLAVE) | 192.168.255.31
-Barman (ELK) | 192.168.255.40
+WEB | 192.168.255.20
+Postgresql (MASTER) | 192.168.255.30
+Postgresql (SLAVE) | 192.168.255.31
+Barman  | 192.168.255.40
 Server log (Syslog) | 192.168.255.50
-Monitoring (Srvmon) | 192.168.10.90
+Monitoring (Srvmon) | 192.168.255.60
 
 
-Для разворачивания стенда выполняем `vagrant up`. Для разворачивания хостов подготовлен Ansible playbook. В playbook ипортируются роли, каждая роль разворачивает определенную службу (11 ролей).
+Для разворачивания стенда выполняем `vagrant up`. Для разворачивания хостов подготовлен Ansible playbook. В playbook ипортируются роли, каждая роль разворачивает определенную службу.
 
-
-Параметры для Zabbix:
-
-Хосты | Hostname
-------| ---------
-Router | router
-WEB | web
-Postgresql Master | mysqlmaster
-Postgresql  | mysqlslave
-Syslog | syslog
-Backup | Barman
 
 ### Доступ к службам
 
-> Для доступа к веб-проекту на Wordpress необходимо на хост машине прописать адрес роутера (Router): `192.168.10.10 dimkaspaun.ru`.
+> Для доступа к веб-проекту на Nextcloud, Prometheus, Alertmanager, Grafana необходимо на хост машине прописать адреса роутера:
+> `192.168.255.20 nextcloud.home.ru`.
+> `192.168.255.60 prometheus.home.ru`.
+> `192.168.255.60 alertmanager.home.ru`.
+> `192.168.255.60 grafana.home.ru`.
 
 Сервис | Адрес
 ------| ---------
-Wordpress (Nginx+PHP-FPM) | https://192.168.10.20 (https://dimkaspaun.ru)
-ELK | http://192.168.10.40:5601
-Zabbix | http://192.168.10.50/zabbix
+Nextcloud (Nginx+PHP-FPM) | https://nextcloud.home.ru
+Prometheus | prometheus.home.ru
+Alertmanager | http://alertmanager.home.ru
+Grafana | http://grafana.home.ru`
+
+<img width="1662" alt="image" src="https://github.com/user-attachments/assets/55c98575-a3a8-49a6-919c-756260867123">
+
+<img width="1014" alt="image" src="https://github.com/user-attachments/assets/12b19fcd-300d-4e73-9e63-1729dd045d51">
+
+<img width="498" alt="image" src="https://github.com/user-attachments/assets/0d49d125-29ef-4c83-bc91-d893ae4601e1">
+
+<img width="1356" alt="image" src="https://github.com/user-attachments/assets/2d41b5e6-4236-417e-a07a-bca31840e48a">
