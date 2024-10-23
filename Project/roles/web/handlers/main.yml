@@ -1,0 +1,32 @@
+---
+# handlers file for web
+- name: Start nginx
+  service:
+    name: nginx
+    state: started
+
+- name: reload nginx
+  service:
+    name: nginx
+    state: reloaded
+
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted
+    enabled: yes
+
+- name: systemd reload
+  systemd:
+    daemon_reload: yes
+
+- name: rsyslog restart
+  systemd:
+    name: rsyslog
+    state: restarted
+
+- name: restart php-fpm
+  service:
+    name: php{{ php_ver }}-fpm
+    state: restarted
+    enabled: yes
