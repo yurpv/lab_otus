@@ -63,7 +63,7 @@ Monitoring (Srvmon) | 192.168.255.60
 Сервис | Адрес
 ------| ---------
 Nextcloud (Nginx+PHP-FPM) | https://nextcloud.home.ru
-Prometheus | prometheus.home.ru
+Prometheus | https:prometheus.home.ru
 Alertmanager | http://alertmanager.home.ru
 Grafana | http://grafana.home.ru`
 
