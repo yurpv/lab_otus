@@ -1,0 +1,173 @@
+---
+# tasks file for Router
+
+- name: Copy multiple files in Ansible with different permissions
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: 'templates/00-installer-config.yaml.j2', dest: '/etc/netplan/00-installer-config.yaml'}
+    - { src: 'templates/50-vagrant.yaml.j2', dest: '/etc/netplan/50-vagrant.yaml'}
+
+- name: set permission to folder
+  file:
+    dest: /etc/netplan
+    recurse: yes
+    mode: '0600'
+
+- name: Apply netplan
+  command: sudo netplan apply
+    async: 45
+    poll: 0
+
+- name: update
+  apt:
+    update_cache: yes
+
+- name: Upgrade all packages
+    apt:
+      upgrade: dist
+      force_apt_get: yes
+
+- name: Set timezone to Europe/Moscow
+  timezone:
+    name: Europe/Moscow
+
+- name: install app
+  apt:
+    name: openvswitch-switch-dpdk
+    state: latest
+
+- name: Apply netplan
+    command: sudo netplan apply
+      async: 45
+      poll: 0
+
+- name: Install required packages
+  apt:
+    name:
+      - python3-psycopg2
+      - acl
+    state: latest
+
+- name: Set up Postgres repo
+        shell: |
+         sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+
+- name: Download PostgreSQL key and add it to system keyring
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+      #state: present
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Install PostgreSQL
+  apt:
+    name:
+      - postgresql-16
+      - postgresql-contrib-16
+      - barman-cli
+    #state: present
+    update_cache: true
+
+    #  - name: Create DB for backup
+    #    become_user: postgres
+    #    postgresql_db:
+    #      name: nextcloud
+    #      encoding: UTF-8
+    #      template: template0
+    #      state: present
+
+    #  - name: Create db user
+    #    community.postgresql.postgresql_user:
+    #      state: present
+    #      name: "{{ db_user }}"
+    #      password: "{{ db_password }}"
+    #    become: true
+    #    become_user: postgres
+
+
+
+- name: Create a Superuser PostgreSQL database user
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    name: "{{ replicator_user }}"
+    password: "{{ replicator_password }}"
+    role_attr_flags: REPLICATION
+    encrypted: yes
+    state: present
+
+- name: Create barman user
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    name: barman
+    password: '{{ barman_user_password }}'
+    role_attr_flags: SUPERUSER
+    ignore_errors: true
+
+- name: "Create confluence database"
+  become: yes
+  become_user: postgres
+  postgresql_db:
+    state: present
+    name: "{{ db_name }}"
+
+- name: "Create db user"
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    name: "{{ nextcloud_db_user }}"
+    password: "{{ nextcloud_db_password }}"
+    role_attr_flags: SUPERUSER
+    state: present
+
+- name: "Grant db user access to app db"
+  become: yes
+  become_user: postgres
+  postgresql_privs:
+    type: database
+    database: "{{ db_name }}"
+    roles: "{{ nextcloud_db_user }}"
+    grant_option: yes
+    privs: all
+
+    #  - name: Create nextcloud user
+      #  become: yes
+      #  become_user: postgres
+      #  postgresql_user:
+      #    name: admcloud
+      #    password: '{{ admcloud_user_password }}'
+      #    role_attr_flags: NOSUPERUSER
+
+- name: copy postgresql.conf
+  template:
+    src: postgresql_master.conf.j2
+    dest: /etc/postgresql/16/main/postgresql.conf
+    owner: postgres
+    group: postgres
+    mode: '0600'
+
+- name: copy pg_hba.conf
+  template:
+    src: pg_hba_master.conf.j2
+    dest: /etc/postgresql/16/main/pg_hba.conf
+    owner: postgres
+    group: postgres
+    mode: '0600'
+
+- name: Restart Postgresql
+    systemd:
+      name: postgresql
+      state: restarted
+
+- name: copy all_log.conf
+    template:
+      src: all_log.conf
+      dest: /etc/rsyslog.d/all_log.conf
+      mode: '0755'
+    notify:
+      - rsyslog restart

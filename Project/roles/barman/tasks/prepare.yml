@@ -1,0 +1,188 @@
+- name: Copy multiple files in Ansible with different permissions
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: 'templates/00-installer-config.yaml.j2', dest: '/etc/netplan/00-installer-config.yaml'}
+    - { src: 'templates/50-vagrant.yaml.j2', dest: '/etc/netplan/50-vagrant.yaml'}
+  when: (ansible_hostname == "barman")
+
+- name: set permission to folder
+  file:
+    dest: /etc/netplan
+    recurse: yes
+    mode: '0600'
+    when: (ansible_hostname == "barman")
+
+- name: Apply netplan
+  command: sudo netplan apply
+  async: 45
+  poll: 0
+  when: (ansible_hostname == "barman")
+
+- name: update
+  apt:
+    update_cache: yes
+  when: (ansible_hostname == "barman")
+
+- name: Upgrade all packages
+  apt:
+    upgrade: dist
+    force_apt_get: yes
+  when: (ansible_hostname == "barman")
+
+- name: Set timezone to Europe/Moscow
+  timezone:
+    name: Europe/Moscow
+
+- name: install app
+  apt:
+    name: openvswitch-switch-dpdk
+    state: latest
+
+- name: Apply netplan
+  command: sudo netplan apply
+  async: 45
+  poll: 0
+  when: (ansible_hostname == "barman")
+
+- name: install base tools
+  apt:
+    name:
+      #- python3-pexpect.noarch
+      - python3-psycopg2
+      - bash-completion
+      - acl
+    state: present
+    update_cache: true
+  when: (ansible_hostname == "barman")
+
+- name: Set up Postgres repo
+  shell: |
+   sudo sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+  when: (ansible_hostname == "barman")
+
+- name: Download PostgreSQL key and add it to system keyring
+  apt_key:
+    url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    state: present
+  when: (ansible_hostname == "barman")
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+  when: (ansible_hostname == "barman")
+
+- name: install barman and postgresql packages on barman
+  apt:
+    name:
+      - barman
+      - barman-cli
+      - postgresql-16
+    state: present
+    update_cache: true
+  when: (ansible_hostname == "barman")
+
+- name: generate SSH key for postgres
+  user:
+    name: postgres
+    generate_ssh_key: yes
+    ssh_key_type: rsa
+    ssh_key_bits: 4096
+    force: no
+  when: (ansible_hostname == "psqlmaster")
+
+#  Генерируем SSH-ключ для пользователя barman на хосте barman
+- name: generate SSH key for barman
+  user:
+    name: barman
+    uid: 994
+    shell: /bin/bash
+    generate_ssh_key: yes
+    ssh_key_type: rsa
+    ssh_key_bits: 4096
+    force: no
+  when: (ansible_hostname == "barman")
+
+#  Забираем содержимое открытого ключа postgres c хоста master
+- name: fetch all public ssh keys master
+  shell: cat /var/lib/postgresql/.ssh/id_rsa.pub
+  register: ssh_keys
+  when: (ansible_hostname == "psqlmaster")
+
+#  Копируем ключ с barman на master
+- name: transfer public key to barman
+  delegate_to: barman
+  authorized_key:
+    key: "{{ ssh_keys.stdout }}"
+    comment: "{{ansible_hostname}}"
+    user: barman
+  when: (ansible_hostname == "psqlmaster")
+
+#  Забираем содержимое открытого ключа barman c хоста barman
+- name: fetch all public ssh keys barman
+  shell: cat /var/lib/barman/.ssh/id_rsa.pub
+  register: ssh_keys
+  when: (ansible_hostname == "barman")
+
+#  Копируем ключ с master на barman
+- name: transfer public key to barman
+  delegate_to: psqlmaster
+  authorized_key:
+    key: "{{ ssh_keys.stdout }}"
+    comment: "{{ansible_hostname}}"
+    user: postgres
+  when: (ansible_hostname == "barman")
+
+# Копируем файл .pgpass
+- name: copy .pgpass
+  template:
+    src: .pgpass.j2
+    dest: /var/lib/barman/.pgpass
+    owner: barman
+    group: barman
+    mode: '0600'
+  when: (ansible_hostname == "barman")
+
+# Копируем файл barman.conf
+- name: copy barman.conf
+  template:
+    src: barman.conf.j2
+    dest: /etc/barman.conf
+    owner: barman
+    group: barman
+    mode: '0755'
+  when: (ansible_hostname == "barman")
+
+# Копируем файл master.conf
+- name: copy psqlmaster.conf
+  template:
+    src: psqlmaster.conf.j2
+    dest: /etc/barman.d/psqlmaster.conf
+    owner: barman
+    group: barman
+    mode: '0755'
+  when: (ansible_hostname == "barman")
+
+- name: barman switch-wal psqlmaster
+  become_user: barman
+  shell: barman switch-wal psqlmaster
+  when: (ansible_hostname == "barman")
+
+- name: barman cron
+  become_user: barman
+  shell: barman cron
+  when: (ansible_hostname == "barman")
+
+- name: Switch-xlog force
+  shell: barman switch-xlog --force --archive psqlmaster
+  when: (ansible_hostname == "barman")
+
+- name: copy all_log.conf
+  template:
+    src: all_log.conf
+    dest: /etc/rsyslog.d/all_log.conf
+    mode: '0755'
+  notify:
+    - rsyslog restart
+  when: (ansible_hostname == "barman")

@@ -1,0 +1,10 @@
+---
+# tasks file for Router
+- name: Prepare For Install Router
+  include_tasks: tasks/prepare.yml
+
+- name: Install UFW
+  include_tasks: tasks/setting_ufw.yml
+
+- name: Install Node_exporter
+  include_tasks: tasks/install_node_exporter.yml
