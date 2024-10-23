@@ -33,12 +33,6 @@
 - Для мониторинга используется Prometheus + Alertmanager, для оповещения используется telegam
 - За визуалтзацию отвечает grafana
 
-<img width="1014" alt="image" src="https://github.com/user-attachments/assets/12b19fcd-300d-4e73-9e63-1729dd045d51">
-
-<img width="498" alt="image" src="https://github.com/user-attachments/assets/0d49d125-29ef-4c83-bc91-d893ae4601e1">
-
-<img width="1356" alt="image" src="https://github.com/user-attachments/assets/2d41b5e6-4236-417e-a07a-bca31840e48a">
-
 
 
 ### Хосты
