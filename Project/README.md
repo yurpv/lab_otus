@@ -64,8 +64,8 @@ Monitoring (Srvmon) | 192.168.255.60
 ------| ---------
 Nextcloud (Nginx+PHP-FPM) | https://nextcloud.home.ru
 Prometheus | https://prometheus.home.ru
-Alertmanager | http://alertmanager.home.ru
-Grafana | http://grafana.home.ru`
+Alertmanager | https://alertmanager.home.ru
+Grafana | https://grafana.home.ru`
 
 <img width="1662" alt="image" src="https://github.com/user-attachments/assets/55c98575-a3a8-49a6-919c-756260867123">
 
