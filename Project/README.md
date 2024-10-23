@@ -67,7 +67,7 @@ Prometheus | https://prometheus.home.ru
 Alertmanager | https://alertmanager.home.ru
 Grafana | https://grafana.home.ru`
 
-<img width="1662" alt="image" src="https://github.com/user-attachments/assets/55c98575-a3a8-49a6-919c-756260867123">
+<img width="1657" alt="image" src="https://github.com/user-attachments/assets/f85e7327-ae0f-465d-a6ea-52267262e123">
 
 <img width="1014" alt="image" src="https://github.com/user-attachments/assets/12b19fcd-300d-4e73-9e63-1729dd045d51">
 
