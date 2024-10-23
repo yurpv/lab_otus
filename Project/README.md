@@ -74,3 +74,6 @@ Grafana | http://grafana.home.ru`
 <img width="498" alt="image" src="https://github.com/user-attachments/assets/0d49d125-29ef-4c83-bc91-d893ae4601e1">
 
 <img width="1356" alt="image" src="https://github.com/user-attachments/assets/2d41b5e6-4236-417e-a07a-bca31840e48a">
+
+![image](https://github.com/user-attachments/assets/7151f708-a0fe-47ef-83ad-12e18929756c)
+
