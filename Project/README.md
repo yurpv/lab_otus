@@ -17,3 +17,5 @@
 ## Проект
 
 Схема стенда
+
+![Project work Diagram drawio (6)](https://github.com/user-attachments/assets/2d2a81a4-2d75-4bf7-87b2-54f78847af09)
