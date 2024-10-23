@@ -1,0 +1,60 @@
+---
+# handlers file for web
+- name: Start Nginx
+  service:
+    name: nginx
+    state: started
+
+- name: Reload Nginx
+  service:
+    name: nginx
+    state: reloaded
+
+- name: Restart psql
+  ansible.builtin.service:
+    name: "{{ pgsql_daemon }}"
+    state: restarted
+
+- name: Start http
+  ansible.builtin.service:
+    name: "{{ nextcloud_websrv }}"
+    state: started
+
+- name: Restart http
+  ansible.builtin.service:
+    name: "{{ nextcloud_websrv }}"
+    state: restarted
+
+- name: Reload http
+  ansible.builtin.service:
+    name: "{{ nextcloud_websrv }}"
+    state: reloaded
+
+- name: Start php-fpm
+  ansible.builtin.service:
+    name: php{{ php_ver }}-fpm
+    state: started
+
+- name: Reload php-fpm
+  ansible.builtin.service:
+    name: php{{ php_ver }}-fpm
+    state: reloaded
+
+- name: Start redis
+  ansible.builtin.service:
+    name: redis-server
+    state: started
+
+- name: Restart redis
+  ansible.builtin.service:
+    name: redis-server
+    state: restarted
+
+- name: systemd reload
+  systemd:
+    daemon_reload: yes
+
+- name: rsyslog restart
+  systemd:
+    name: rsyslog
+    state: restarted
