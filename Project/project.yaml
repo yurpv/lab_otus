@@ -1,0 +1,42 @@
+---
+  - name: Configure Router server
+    hosts: router
+    become: yes
+    roles:
+      - role: Router
+
+  - name: Configure Web server
+    hosts: web
+    become: yes
+    roles:
+      - role: web
+
+  - name: Configure psqlmaster server
+    hosts: psqlmaster
+    become: yes
+    roles:
+      - role: psqlmaster
+
+  - name: Configure psqlslave server
+    hosts: psqlslave
+    become: yes
+    roles:
+      - role: psqlslave
+
+  - name: Configure srvmon server
+    hosts: srvmon
+    become: yes
+    roles:
+      - role: srvmon
+
+  - name: Configure srvlog server
+    hosts: srvlog
+    become: yes
+    roles:
+      - role: srvlog
+
+  - name: Configure barman server
+    hosts: barman
+    become: yes
+    roles:
+      - role: barman

@@ -1,0 +1,8 @@
+[Hosts]
+router ansible_host=192.168.255.10 ansible_port=22 ansible_private_key_file=.vagrant/machines/router/vmware_desktop/private_key
+web ansible_host=192.168.255.20 ansible_port=22 ansible_private_key_file=.vagrant/machines/web/vmware_desktop/private_key
+psqlmaster ansible_host=192.168.255.30 ansible_port=22 ansible_private_key_file=.vagrant/machines/psqlmaster/vmware_desktop/private_key
+psqlslave ansible_host=192.168.255.31 ansible_port=22 ansible_private_key_file=.vagrant/machines/psqlslave/vmware_desktop/private_key
+barman ansible_host=192.168.255.40 ansible_port=22 ansible_private_key_file=.vagrant/machines/barman/vmware_desktop/private_key
+srvlog ansible_host=192.168.255.50 ansible_port=22 ansible_private_key_file=.vagrant/machines/srvlog/vmware_desktop/private_key
+srvmon ansible_host=192.168.255.60 ansible_port=22 ansible_private_key_file=.vagrant/machines/srvmon/vmware_desktop/private_key
