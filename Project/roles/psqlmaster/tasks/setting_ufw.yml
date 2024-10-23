@@ -1,0 +1,24 @@
+- name: Allow everything and enable UFW
+  ufw:
+    state: enabled
+    policy: allow
+
+- name: Access IN ports from Lab net
+  ufw:
+    rule: allow
+    direction: out
+    src: 192.168.255.10
+    dest: 192.168.255.0/26
+    port: "{{ item }}"
+  with_items:
+    - "{{ ufw_allowed_ports }}"
+
+- name: Access OUT ports from Lab net
+  ufw:
+    rule: allow
+    direction: in
+    src: 192.168.255.0/26
+    dest: 192.168.255.10
+    port: "{{ item }}"
+  with_items:
+      - "{{ ufw_allowed_ports }}"

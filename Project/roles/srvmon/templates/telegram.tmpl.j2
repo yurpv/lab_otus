@@ -1,0 +1,28 @@
+{{ define "telegram.default" }}
+{{ range .Alerts }}
+<b>Prometheus Alerts</b> {{ if eq .Status "firing"}}&#x1F525<b>{{ .Status | toUpper }}</b>&#x1F525{{ else }}&#x2705<b>{{ .Status | toUpper }}</b>&#x2705{{ end }}
+<b>Labels:</b>
+ <b>- Alertname</b> = {{ .Labels.alertname }}
+{{- if .Labels.instance }}
+{{- if .Labels.job }}
+ <b>- Instance</b> = {{ .Labels.instance }} ( {{ .Labels.job }} )
+{{- end }}
+{{- end }}
+{{- if .Annotations.name }}
+ <b>- Job </b>= {{ .Annotations.name }}
+{{- end }}
+{{- if .Labels.severity }}
+{{- end }}
+ <b>- Severity</b> = {{ .Labels.severity }}
+<b>Annotations:</b>
+{{- if .Annotations.description }}
+ <b>- Description</b> = {{ .Annotations.description }}
+{{- end }}
+{{- if .Annotations.summary }}
+ <b>- Summary</b> = {{ .Annotations.summary }}
+{{- end }}
+{{- if .Annotations.source }}
+{{ .Annotations.source }}
+{{- end }}
+{{ end }}
+{{ end }}
