@@ -18,12 +18,13 @@ Web-проект с развертыванием нескольких вирту
 
 Схема стенда
 
-![Project work Diagram drawio (6)](https://github.com/user-attachments/assets/2d2a81a4-2d75-4bf7-87b2-54f78847af09)
+![image](https://github.com/user-attachments/assets/0438cabf-12c8-438a-ad95-a148d620db4d)
+
 
 
 ### Состав проекта
 
-- 7 хостов. 
+- 10 хостов. 
 - Метод развертывания: Vagrant, Ansible.
 - На хостах включен Firewall (UFW).
 - Настроены необходимые службы и порты.
