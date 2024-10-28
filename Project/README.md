@@ -75,13 +75,20 @@ Prometheus | https://prometheus.home.ru
 Alertmanager | https://alertmanager.home.ru
 Grafana | https://grafana.home.ru`
 
-<img width="1657" alt="image" src="https://github.com/user-attachments/assets/f85e7327-ae0f-465d-a6ea-52267262e123">
+<img width="1646" alt="image" src="https://github.com/user-attachments/assets/7d687ee6-6f4b-490f-969b-af30e191dab4">
+
 
 <img width="1014" alt="image" src="https://github.com/user-attachments/assets/12b19fcd-300d-4e73-9e63-1729dd045d51">
 
-<img width="498" alt="image" src="https://github.com/user-attachments/assets/0d49d125-29ef-4c83-bc91-d893ae4601e1">
 
-<img width="1356" alt="image" src="https://github.com/user-attachments/assets/2d41b5e6-4236-417e-a07a-bca31840e48a">
+<img width="519" alt="image" src="https://github.com/user-attachments/assets/e4513e50-581e-4fab-957e-eb6c9d1b759e">
+
+
+
+
+<img width="1320" alt="image" src="https://github.com/user-attachments/assets/eab70a74-7b1f-4af0-a4ba-aac14ac026d9">
+
+
 
 ![image](https://github.com/user-attachments/assets/7151f708-a0fe-47ef-83ad-12e18929756c)
 
