@@ -1,0 +1,16 @@
+[Unit]
+Description=Prometheus exporter for Postgresql
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+EnvironmentFile=/etc/sysconfig/postgres_exporter
+User=postgres
+Group=postgres
+Type=simple
+ExecStart=/usr/local/bin/postgres_exporter
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
