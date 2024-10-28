@@ -60,9 +60,11 @@ Monitoring (Srvmon) | 192.168.255.60
 ![image](https://github.com/user-attachments/assets/5d662d89-c2d0-4383-8f11-b1f0abd82c8f)
 
 ### Описание хостов.
-- Route - сервер для выхода в интернет, так же на нем развнут Dnsmasq
-- Nginx - сервер для балансировки web
-- 
+
+Server| Назначение 
+Route | сервер для выхода в интернет, так же на нем развнут Dnsmasq
+Nginx | сервер для балансировки web
+Web, Web2 | серве
 
 
 Сервис | Адрес
