@@ -1,0 +1,67 @@
+---
+
+- name: Create User Alertmanager
+  user:
+    name: alertmanager
+    create_home: no
+    shell: /bin/false
+
+- name: Create Directories For Alertmanager
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: alertmanager
+    group: alertmanager
+  loop:
+    - '/tmp/alertmanager'
+    - '/etc/alertmanager'
+    - '/etc/alertmanager/tmpl'
+    - '/var/lib/prometheus/alertmanager'
+
+- name: Download And Unzipped Alertmanager
+  unarchive:
+    src: https://github.com/prometheus/alertmanager/releases/download/v{{ alertmanager_version }}/alertmanager-{{ alertmanager_version }}.linux-arm64.tar.gz
+    dest: /tmp/alertmanager
+    creates: /tmp/alertmanager/alertmanager-{{ alertmanager_version }}.linux-arm64
+    remote_src: yes
+
+- name: Copy Bin Files From Unzipped to Alertmanager
+  copy:
+    src: /tmp/alertmanager/alertmanager-{{ alertmanager_version }}.linux-arm64/{{ item }}
+    dest: /usr/local/bin/
+    remote_src: yes
+    mode: preserve
+    owner: alertmanager
+    group: alertmanager
+  loop: [ 'alertmanager', 'amtool' ]
+
+- name: Copy Conf File From Unzipped to Alertmanager
+  copy:
+    src: /tmp/alertmanager/alertmanager-{{ alertmanager_version }}.linux-arm64/alertmanager.yml
+    dest: /etc/alertmanager/
+    remote_src: yes
+    mode: preserve
+    owner: alertmanager
+    group: alertmanager
+
+- name: Remove alertmanager archive files
+  file:
+    path: /tmp/alertmanager
+    state: absent
+
+- name: Copy multiple files in Ansible for Alertmanager config
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: 'templates/alertmanager.yml.j2', dest: '/etc/alertmanager/alertmanager.yml'}
+    - { src: 'templates/telegram.tmpl.j2', dest: '/etc/alertmanager/tmpl/telegram.tmpl'}
+    - { src: 'templates/alertmanager.service.j2', dest: '/etc/systemd/system/alertmanager.service'}
+  notify:
+    - systemd reload
+
+- name: alertmanager systemd
+  systemd:
+    name: alertmanager
+    enabled: yes
+    state: started

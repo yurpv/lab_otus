@@ -1,0 +1,10 @@
+---
+# defaults file for srvlog
+## defaults settings for roles UFW
+ufw_allowed_ports:
+  - 22
+  - 53
+  - 80
+  - 443
+  - 514
+  - 9100

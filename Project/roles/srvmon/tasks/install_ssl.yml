@@ -1,0 +1,57 @@
+- name: install openssl
+  become: true
+  package:
+    name: openssl
+    state: present
+  when: ssl_certificate_install_openssl
+
+- name: Create directories for ssl
+  file:
+    path: "{{ item }}"
+    state: directory
+  loop:
+    - '/etc/nginx/ssl'
+
+- name: generate self-signed SSL certificate prometheus
+  become: true
+  command: >
+    openssl req -new -nodes -x509 -subj
+    {{ ssl_certificate_selfsigned_subject_prom }}
+    -days {{ ssl_certificate_selfsigned_days }}
+    -keyout {{ ssl_certificate_key_path_prom }}
+    -out {{ ssl_certificate_public_path_prom }}
+    -extensions v3_ca
+  args:
+    # Don't overwrite existing certificate
+    creates: "/etc/nginx/ssl/prometheus.key"
+
+- name: generate self-signed SSL certificate grafana
+  become: true
+  command: >
+    openssl req -new -nodes -x509 -subj
+    {{ ssl_certificate_selfsigned_subject_graf }}
+    -days {{ ssl_certificate_selfsigned_days }}
+    -keyout {{ ssl_certificate_key_path_graf }}
+    -out {{ ssl_certificate_public_path_graf }}
+    -extensions v3_ca
+  args:
+    # Don't overwrite existing certificate
+    creates: "{{ ssl_certificate_key_path_graf }}"
+
+- name: generate self-signed SSL certificate alertmanager
+  become: true
+  command: >
+    openssl req -new -nodes -x509 -subj
+    {{ ssl_certificate_selfsigned_subject_altman }}
+    -days {{ ssl_certificate_selfsigned_days }}
+    -keyout {{ ssl_certificate_key_path_altman }}
+    -out {{ ssl_certificate_public_path_altman }}
+    -extensions v3_ca
+  args:
+    # Don't overwrite existing certificate
+    creates: "{{ ssl_certificate_key_path_altman }}"
+
+- name: Generate DH Parameters with a different size (2048 bits)
+  openssl_dhparam:
+    path: /etc/nginx/ssl/dhparam.pem
+    size: 2048

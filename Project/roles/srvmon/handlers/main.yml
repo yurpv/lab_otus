@@ -1,0 +1,22 @@
+---
+# handlers file for srvmon
+
+- name: systemd reload
+  systemd:
+    daemon_reload: yes
+
+- name: grafana systemd
+  systemd:
+    name: grafana-server
+    enabled: yes
+    state: started
+
+- name: rsyslog restart
+  systemd:
+    name: rsyslog
+    state: restarted
+
+- name: reload nginx
+  service:
+    name: nginx
+    state: reloaded

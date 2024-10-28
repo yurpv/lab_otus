@@ -1,0 +1,49 @@
+# tasks file for web
+- name: Prepare For Install Web
+  include_tasks:
+    file: prepare.yml
+    apply:
+      tags: prepare
+  tags: prepare
+
+- name: Install PHP
+  include_tasks:
+    file: install_php.yml
+    apply:
+      tags: php
+  tags: php
+
+- name: Setting UFW
+  include_tasks:
+    file: setting_ufw.yml
+    apply:
+      tags: ufw
+  tags: ufw
+
+- name: Install SSL
+  include_tasks:
+    file: install_ssl.yml
+    apply:
+      tags: ssl
+  tags: ssl
+
+- name: Install Nginx
+  include_tasks:
+    file: install_nginx.yml
+    apply:
+      tags: nginx
+  tags: nginx
+
+- name: Install Nextcloud
+  include_tasks:
+    file: download_nc.yml
+    apply:
+      tags: nc
+  tags: nc
+
+- name: Install Node_exporter
+  include_tasks:
+    file: install_node_exporter.yml
+    apply:
+      tags: node_exporter
+  tags: node_exporter
