@@ -70,15 +70,16 @@ Srvmon | сервер мониторига Prometheus + Alertmanager, для о�
 
 Сервис | Адрес
 ------| ---------
-Nextcloud (Nginx+PHP-FPM) | https://nextcloud.home.ru
-Prometheus | https://prometheus.home.ru
-Alertmanager | https://alertmanager.home.ru
-Grafana | https://grafana.home.ru`
+Nextcloud (Nginx+PHP-FPM) | https://nextcloud.home.local
+Prometheus | https://prometheus.home.local
+Alertmanager | https://alertmanager.home.local
+Grafana | https://grafana.home.local
 
 <img width="1646" alt="image" src="https://github.com/user-attachments/assets/7d687ee6-6f4b-490f-969b-af30e191dab4">
 
 
-<img width="1014" alt="image" src="https://github.com/user-attachments/assets/12b19fcd-300d-4e73-9e63-1729dd045d51">
+<img width="1662" alt="image" src="https://github.com/user-attachments/assets/5b162f90-5b85-41e2-a97e-03cb45f2187f">
+
 
 
 <img width="519" alt="image" src="https://github.com/user-attachments/assets/e4513e50-581e-4fab-957e-eb6c9d1b759e">
