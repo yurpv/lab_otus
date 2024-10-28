@@ -85,10 +85,7 @@ Grafana | https://grafana.home.local
 <img width="519" alt="image" src="https://github.com/user-attachments/assets/e4513e50-581e-4fab-957e-eb6c9d1b759e">
 
 
-
-
-<img width="1320" alt="image" src="https://github.com/user-attachments/assets/eab70a74-7b1f-4af0-a4ba-aac14ac026d9">
-
+<img width="1646" alt="image" src="https://github.com/user-attachments/assets/a3376f60-3309-4260-bedd-6a3c12bd2de2">
 
 
 ![image](https://github.com/user-attachments/assets/7151f708-a0fe-47ef-83ad-12e18929756c)
