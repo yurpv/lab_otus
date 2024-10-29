@@ -13,8 +13,13 @@
     dest: "{{ item.dest }}"
   with_items:
     - { src: 'templates/nginx.conf.j2', dest: '/etc/nginx/nginx.conf'}
-    - { src: 'templates/http.conf.j2', dest: '/etc/nginx/conf.d/http.conf'}
-    - { src: 'templates/nextcloud.conf.j2', dest: '/etc/nginx/conf.d/nextcloud.conf'}
+    - { src: 'templates/nextcloud.conf.j2', dest: '/etc/nginx/sites-available/nextcloud.conf'}
+
+- name: Create a symbolic link
+  file:
+    src: /etc/nginx/sites-available/nextcloud.conf
+    dest: /etc/nginx/sites-enabled/nextcloud.conf
+    state: link
 
 - name: Remove default uplink
   file:
