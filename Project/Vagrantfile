@@ -1,17 +1,39 @@
 MACHINES = {
-    :router => {
-          :box_name => "bento/ubuntu-22.04",
-          #:box_version => "202407.23.0",
-          :ip_addr => "192.168.255.10",
-          #:base_mac => "255.255.255.252"
+  :router => {
+        :box_name => "bento/ubuntu-22.04",
+        #:box_version => "202407.23.0",
+        :ip_addr => "192.168.255.10",
+        #:base_mac => "255.255.255.252"
   },
 
-  :web => {
+#  :nginx => {
+#        :box_name => "bento/ubuntu-22.04",
+        #:box_version => "202407.23.0",
+#        :ip_addr => "192.168.255.11",
+#        #:base_mac => "255.255.255.252"
+#  },
+
+
+  :web1 => {
         :box_name => "bento/ubuntu-22.04",
         #:box_version => "202407.23.0",
         :ip_addr => "192.168.255.20",
-        :base_mac => "255.255.255.0"
-},
+        #:base_mac => "255.255.255.0"
+  },
+
+  :web2 => {
+        :box_name => "bento/ubuntu-22.04",
+        #:box_version => "202407.23.0",
+        :ip_addr => "192.168.255.21",
+        #:base_mac => "255.255.255.0"
+  },
+
+  :nfs => {
+        :box_name => "bento/ubuntu-22.04",
+        #:box_version => "202407.23.0",
+        :ip_addr => "192.168.255.22",
+        #:base_mac => "255.255.255.0"
+  },
 
   :psqlmaster => {
         :box_name => "bento/ubuntu-22.04",
@@ -25,23 +47,24 @@ MACHINES = {
         :ip_addr => '192.168.255.31'
   },
 
-  :barman => {
+  :backup => {
         :box_name => "bento/ubuntu-22.04",
         #:box_version => "202407.23.0",
         :ip_addr => '192.168.255.40'
   },
 
-  :srvlog => {
-        :box_name => "bento/ubuntu-22.04",
-        #:box_version => "202407.23.0",
-        :ip_addr => '192.168.255.50'
-  },
+#  :srvlog => {
+#        :box_name => "bento/ubuntu-22.04",
+#        #:box_version => "202407.23.0",
+#        :ip_addr => '192.168.255.50'
+#  },
 
   :srvmon => {
         :box_name => "bento/ubuntu-22.04",
         #:box_version => "202407.23.0",
         :ip_addr => '192.168.255.60'
   }
+
 }
 
 
