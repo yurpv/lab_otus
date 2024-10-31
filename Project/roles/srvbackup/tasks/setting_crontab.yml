@@ -1,0 +1,28 @@
+
+- name: Create a directory
+  file:
+    path: /home/vagrant/scripts
+    state: directory
+    mode: '0755'
+
+- name: Copy multiple files in Ansible
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: 'templates/copy_backup.sh.j2', dest: '/home/vagrant/scripts/copy_backup.sh'}
+
+- name: Creates a cron file under /etc/cron.d
+  cron:
+    name: copy backup
+    minute: "0/35"
+    user: vagrant
+    job: "/home/vagrant/scripts/copy.backup.sh"
+
+
+- name: Change file ownership, group and permissions
+  ansible.builtin.file:
+    path: /home/vagrant/scripts
+    owner: vagrant
+    group: vagrant
+    mode: '0755'
