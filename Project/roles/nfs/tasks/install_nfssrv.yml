@@ -1,0 +1,31 @@
+---
+
+- name: Install DNSmasq
+  package:
+    name: nfs-kernel-server
+    state: present
+
+- name: Create directories for NFS
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: nogroup
+    group: nogroup
+  loop:
+    - '/mnt/nextcloud'
+- name: Create directories for NFS
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: vagrant
+    group: vagrant
+  loop:
+    - '/home/vagrant/scripts'
+
+- name: Copy multiple files in Ansible 
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: 'templates/nfs_exports.j2', dest: '/etc/exports'}
+    - { src: 'templates/rsync_nextcloud_data.sh.j2', dest: '/home/vagrant/scripts/rsync_nextcloud_data.sh'}

@@ -1,0 +1,48 @@
+server {
+#        listen 80 default_server;
+#        listen [::]:80 default_server;
+
+        # SSL configuration
+        listen 443 ssl;# default_server;
+        listen [::]:443 ssl;# default_server;
+
+        server_name nextcloud.home.local;
+
+        ssl_certificate            /etc/nginx/ssl/nextcloud.crt;
+        ssl_certificate_key        /etc/nginx/ssl/nextcloud.key;
+#        ssl_trusted_certificate    /etc/nginx/ssl/dhparam.pem;
+
+#        proxy_ssl_certificate /etc/letsencrypt/live/my_site.com/fullchain.pem;
+#        proxy_ssl_certificate_key  /etc/letsencrypt/live/my_site.com/privkey.pem;
+#        proxy_ssl_trusted_certificate /etc/letsencrypt/live/my_site.com/chain.pem;
+
+        proxy_ssl_verify        on;
+        proxy_ssl_session_reuse off;
+
+        ssl_verify_client off;
+        ssl_protocols        SSLv3 TLSv1 TLSv1.1 TLSv1.2;
+        ssl_ciphers RC4:HIGH:!aNULL:!MD5;
+        ssl_prefer_server_ciphers on;
+
+        location ~ api|put|get$ {
+                proxy_pass http://backend;
+        }
+
+        location ~ \.well-known {
+                default_type "text/plain";
+                try_files $uri $uri/ =404;
+        }
+
+        location / {
+                proxy_http_version 1.0;
+                proxy_set_header   Connection "";
+
+                proxy_set_header HOST $host;
+                proxy_set_header X-Forwarded-Proto $scheme;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+                proxy_buffering off;
+                proxy_pass http://static_server;
+        }
+}
