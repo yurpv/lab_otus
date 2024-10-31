@@ -56,7 +56,7 @@ Monitoring (Srvmon) | 192.168.255.60
 
 Server| Назначение 
 ------|-------------
-Route | сервер для выхода в интернет, так же на нем развнут Dnsmasq
+Route | сервер для выхода в интернет, так же на нем развнут Dnsmasq и HAporoxy
 Web, Web2 | сервера Web приложения nexcloud
 NFS | сревре хранания данных с nextcloud
 PSQLMaster | основной сервер базы данных Posgresql для nextcloud
