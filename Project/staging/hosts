@@ -6,6 +6,6 @@ web2 ansible_host=192.168.255.21 ansible_port=22 ansible_private_key_file=.vagra
 nfs ansible_host=192.168.255.22 ansible_port=22 ansible_private_key_file=.vagrant/machines/nfs/vmware_desktop/private_key
 psqlmaster ansible_host=192.168.255.30 ansible_port=22 ansible_private_key_file=.vagrant/machines/psqlmaster/vmware_desktop/private_key
 psqlslave ansible_host=192.168.255.31 ansible_port=22 ansible_private_key_file=.vagrant/machines/psqlslave/vmware_desktop/private_key
-srvbackup ansible_host=192.168.255.40 ansible_port=22 ansible_private_key_file=.vagrant/machines/barman/vmware_desktop/private_key
+srvbackup ansible_host=192.168.255.40 ansible_port=22 ansible_private_key_file=.vagrant/machines/srvbackup/vmware_desktop/private_key
 srvlog ansible_host=192.168.255.50 ansible_port=22 ansible_private_key_file=.vagrant/machines/srvlog/vmware_desktop/private_key
 srvmon ansible_host=192.168.255.60 ansible_port=22 ansible_private_key_file=.vagrant/machines/srvmon/vmware_desktop/private_key
