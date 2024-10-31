@@ -18,7 +18,8 @@ Web-проект с развертыванием нескольких вирту
 
 Схема стенда
 
-![image](https://github.com/user-attachments/assets/ee8488a5-ad01-4f32-b5f8-5098409d9f1c)
+![image](https://github.com/user-attachments/assets/abf95e1a-383f-4ccf-b78a-c892863b6cc9)
+
 
 
 ### Состав проекта
