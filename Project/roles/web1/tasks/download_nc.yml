@@ -1,0 +1,63 @@
+---
+- name: Unzip is installed"
+  package:
+    name: unzip
+    state: present
+  when: nextcloud_archive_format == "zip"
+
+- name: "Download and extract Nextcloud"
+  block:
+    - name: Download & extract Nextcloud to /tmp
+      unarchive:
+        copy: false
+        src: "{{ nextcloud_full_url | default(nextcloud_calculated_url) }}"
+        dest: "/tmp/"
+      vars:
+        #nextcloud_calculated_url: "{{ nextcloud_repository }}/{{ nextcloud_version_channel }}/{{ nextcloud_calculated_file }}"
+        nextcloud_calculated_url: "{{ nextcloud_repository }}/{{ nextcloud_version_channel }}/latest.zip"
+        nextcloud_calculated_file: "{{ [nextcloud_dl_file_name[just_a_dict_key], nextcloud_archive_format] | join('.') }}"
+        just_a_dict_key: "{{ 'latest' if ((nextcloud_get_latest | bool) and (nextcloud_version_channel != 'prereleases')) else nextcloud_version_channel }}"
+
+    - name: Move extracted files to {{ nextcloud_webroot }}
+      command: "cp -r /tmp/nextcloud/. {{ nextcloud_webroot }}/"
+      when: nextcloud_webroot is not none
+      register: output
+      changed_when: "output.rc == 0"
+
+    - name: Remove nextcloud archive files
+      file:
+        path: /tmp/nextcloud
+        state: absent
+
+- name: Create and set directory ownership & permissions for the webroot folder
+  file:
+    path: "{{ nextcloud_webroot }}"
+    mode: "u=rwX,g=rX,o-rwx"
+    recurse: true
+    state: directory
+    owner: "{{ nextcloud_websrv_user }}"
+    group: "{{ nextcloud_websrv_group }}"
+
+- name: Setting config.php
+  shell: |
+    rm /var/www/nextcloud/config/CAN_INSTALL
+    touch /var/www/nextcloud/config/config.php
+    chown -R www-data:www-data /var/www/nextcloud/config/config.php
+    sudo update-alternatives --set php /usr/bin/php8.3
+    sudo -u www-data php /var/www/nextcloud/occ  maintenance:install --database='pgsql' --database-host=192.168.255.30 --database-port=5432 --database-name='nextcloud' --database-user='postgres' --database-pass='P@ssw0rd' --admin-user='admin' --admin-pass='P@ssw0rd' --data-dir=/var/www/nextcloud/data
+    sudo -u www-data php /var/www/nextcloud/occ  config:system:set trusted_domains 0 --value=nextcloud.home.local
+    sudo -u www-data php /var/www/nextcloud/occ  config:system:set datadirectory --value=/mnt/nextcloud/data/
+    sudo -u www-data php /var/www/nextcloud/occ  config:system:set maintenance_window_start --type=integer --value=1
+    sudo -u www-data php /var/www/nextcloud/occ files:scan --all
+    sudo -u www-data php /var/www/nextcloud/occ maintenance:data-fingerprint
+    sudo -u www-data php /var/www/nextcloud/occ maintenance:repair --include-expensive
+    sudo -u www-data php /var/www/nextcloud/occ db:add-missing-indices
+    rm -rf /var/www/nextcloud/data
+
+#- name: Copy config.php in Nextcloud
+#  copy:
+#    src: templates/config.php.j2
+#    dest: /var/www/nextcloud/config/config.php
+#    owner: www-data
+#    group: www-data
+#    mode: 0750
