@@ -1,0 +1,40 @@
+---
+# tasks file for Router
+
+- name: Install Nginx
+  apt:
+    name: nginx
+    state: latest
+  
+
+- name: Create NGINX config file from template
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: 'templates/nginx.conf.j2', dest: '/etc/nginx/nginx.conf'}
+    - { src: 'templates/backend.j2', dest: '/etc/nginx/sites-available/backend'}
+
+- name: Remove default uplink
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+
+- name: Create a symbolic link
+  file:
+    src: /etc/nginx/sites-available/backend
+    dest: /etc/nginx/sites-enabled/backend
+    state: link
+
+- name: Enable Nginx service
+  systemd:
+    name: nginx
+    daemon_reload: yes
+    enabled: yes
+    state: started
+
+- name: restart nginx
+  service:
+    name: nginx
+    state: restarted
+  become: yes

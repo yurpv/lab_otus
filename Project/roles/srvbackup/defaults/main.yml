@@ -1,0 +1,19 @@
+---
+# defaults file for barman
+master_ip: '192.168.255.30'
+master_user: 'postgres'
+barman_ip: '192.168.255.40'
+barman_user: 'barman'
+barman_user_password: 'Otus2024!'
+
+## defaults settings for roles UFW
+ufw_allowed_ports:
+  - 22
+  - 53
+  - 80
+  - 111
+  - 443
+  - 514
+  - 2049
+  - 5432
+  - 9100

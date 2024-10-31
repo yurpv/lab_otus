@@ -1,0 +1,43 @@
+# tasks file for barman
+
+- name: Prepare For Install Barman
+  include_tasks:
+    file: prepare.yml
+    apply:
+      tags: prepare
+  tags: prepare
+
+- name: Prepare For Setting Barman
+  include_tasks:
+    file: setting_barman.yml
+    apply:
+      tags: barman
+  tags: barman
+
+- name: Install UFW
+  include_tasks:
+    file: setting_ufw.yml
+    apply:
+      tags: ufw
+  tags: ufw
+
+- name: Install NFS
+  include_tasks:
+    file: install_nfscl.yml
+    apply:
+      tags: nfs
+  tags: nfs
+
+- name: Install Node_exporter
+  include_tasks:
+    file: install_node_exporter.yml
+    apply:
+      tags: node_exporter
+  tags: node_exporter
+
+- name: Setting Crontab
+  include_tasks:
+    file: setting_crontab.yml
+    apply:
+      tags: crontab
+  tags: crontab

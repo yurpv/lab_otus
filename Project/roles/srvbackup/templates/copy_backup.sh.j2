@@ -1,0 +1,8 @@
+#!/bin/bash
+
+tar -zcf /srv/backup/data/nextcloud_`date +"%Y-%m-%d"`.tar.gz /mnt/backup/nexcloud/
+
+cp /mnt/backup/web/* /srv/backup/web/
+cp /mnt/backup/web2/* /srv/backup/web2/
+
+rm /mnt/backup/web/*
