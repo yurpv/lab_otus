@@ -5,6 +5,7 @@
     state: present
   when: nextcloud_archive_format == "zip"
 
+
 - name: "Download and extract Nextcloud"
   block:
     - name: Download & extract Nextcloud to /tmp
@@ -44,7 +45,7 @@
     touch /var/www/nextcloud/config/config.php
     chown -R www-data:www-data /var/www/nextcloud/config/config.php
     sudo update-alternatives --set php /usr/bin/php8.3
-    sudo -u www-data php /var/www/nextcloud/occ  maintenance:install --database='pgsql' --database-host=192.168.255.30 --database-port=5432 --database-name='nextcloud' --database-user='postgres' --database-pass='P@ssw0rd' --admin-user='admin' --admin-pass='P@ssw0rd' --data-dir=/var/www/nextcloud/data
+    sudo -u www-data php /var/www/nextcloud/occ  maintenance:install --database='pgsql' --database-host=192.168.255.30 --database-port=5432 --database-name='nextcloud' --database-user='postgres' --database-pass='P@ssw0rd' --admin-user='admintemp' --admin-pass='P@ssw0rd' --data-dir=/var/www/nextcloud/data
     sudo -u www-data php /var/www/nextcloud/occ  config:system:set trusted_domains 0 --value=nextcloud.home.local
     sudo -u www-data php /var/www/nextcloud/occ  config:system:set datadirectory --value=/mnt/nextcloud/data/
     sudo -u www-data php /var/www/nextcloud/occ  config:system:set maintenance_window_start --type=integer --value=1
@@ -54,10 +55,6 @@
     sudo -u www-data php /var/www/nextcloud/occ db:add-missing-indices
     rm -rf /var/www/nextcloud/data
 
-#- name: Copy config.php in Nextcloud
-#  copy:
-#    src: templates/config.php.j2
-#    dest: /var/www/nextcloud/config/config.php
-#    owner: www-data
-#    group: www-data
-#    mode: 0750
+- name: Drop adminremp in database
+  shell: |
+    psql --host=192.168.255.30 -U postgres -d nextcloud -c "DELETE FROM public.oc_users WHERE uid='admintemp';"
