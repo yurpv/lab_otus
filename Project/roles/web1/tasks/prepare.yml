@@ -35,7 +35,10 @@
 
 - name: install app
   apt:
-    name: default-jdk
+    name:
+      - default-jdk
+      - openvswitch-switch-dpdk
+      - postgresql-client
     state: latest
 
 - name: 'Ensure the dependencies are installed'
