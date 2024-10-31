@@ -47,7 +47,7 @@ MACHINES = {
         :ip_addr => '192.168.255.31'
   },
 
-  :backup => {
+  :srvbackup => {
         :box_name => "bento/ubuntu-22.04",
         #:box_version => "202407.23.0",
         :ip_addr => '192.168.255.40'
