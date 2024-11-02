@@ -1,0 +1,55 @@
+---
+
+- name: Create User postgres_exporter
+  user:
+    name: postgres_exporter
+    create_home: no
+    shell: /bin/false
+
+- name: Create directories for Postgres_exporter
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: postgres_exporter
+    group: postgres_exporter
+  loop:
+    - '/tmp/postgres_exporter'
+    - '/etc/sysconfig'
+
+- name: Cpoy templates file for postgres_exporter
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: 'templates/postgres_exporter.service.j2', dest: '/etc/systemd/system/postgres_exporter.service'}
+    - { src: 'templates/postgres_exporter.j2', dest: '/etc/sysconfig/postgres_exporter'}
+  notify:
+    - systemd reload
+
+- name: Download And Unzipped Postgres_exporter
+  unarchive:
+    src: https://github.com/prometheus-community/postgres_exporter/releases/download/v{{ postgres_exporter_version }}/postgres_exporter-{{ postgres_exporter_version }}.linux-arm64.tar.gz
+    dest: /tmp/postgres_exporter
+    creates: /tmp/postgres_exporter/postgres_exporter-{{ postgres_exporter_version }}.linux-arm64
+    remote_src: yes
+
+- name: Copy Bin Files From Unzipped to Postgres_exporter
+  copy:
+    src: /tmp/postgres_exporter/postgres_exporter-{{ postgres_exporter_version }}.linux-arm64/{{ item }}
+    dest: /usr/local/bin/
+    remote_src: yes
+    mode: preserve
+    owner: postgres
+    group: postgres
+  loop: [ 'postgres_exporter' ]
+
+- name: Remove postgres_exporter archive files
+  file:
+    path: /tmp/postgres_exporter
+    state: absent
+
+- name: postgres_exporter systemd
+  systemd:
+    name: postgres_exporter
+    enabled: yes
+    state: started
