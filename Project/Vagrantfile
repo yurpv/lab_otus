@@ -6,14 +6,6 @@ MACHINES = {
         #:base_mac => "255.255.255.252"
   },
 
-#  :nginx => {
-#        :box_name => "bento/ubuntu-22.04",
-        #:box_version => "202407.23.0",
-#        :ip_addr => "192.168.255.11",
-#        #:base_mac => "255.255.255.252"
-#  },
-
-
   :web1 => {
         :box_name => "bento/ubuntu-22.04",
         #:box_version => "202407.23.0",
