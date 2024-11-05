@@ -1,0 +1,47 @@
+---
+#- name: Create User Nogroup
+#  user:
+#    name: nogroup
+#    create_home: no
+#    shell: /bin/false
+
+- name: Install NFS
+  package:
+    name: nfs-kernel-server
+    state: present
+
+- name: Create directories for NFS
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: nogroup
+    group: nogroup
+  loop:
+    - '/srv/nfs'
+    - '/srv/nfs/nextcloud/'
+    - '/srv/nfs/backup/'
+    - '/srv/nfs/backup/nextcloud/'
+    - '/srv/nfs/backup/psqlmaster/'
+    - '/srv/nfs/scripts/'
+
+- name: Copy multiple files in Ansible
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: 'templates/nfs_exports.j2', dest: '/etc/exports'}
+    - { src: 'templates/rsync_nextcloud_data.sh.j2', dest: '/srv/nfs/scripts/rsync_nextcloud_data.sh'}
+    - { src: 'files/nextcloud-sqlbkp.sql', dest: '/srv/nfs/backup/psqlmaster/nextcloud-sqlbkp.sql'}
+  #  - { src: 'files/nextcloud.tar', dest: '/srv/nfs/backup/nextcloud.tar'}
+
+- name: Setting nfs
+  shell: |
+    chown -R nogroup:nogroup /srv/nfs
+    chmod 0777 /srv/nfs/
+    chmod +x /srv/nfs/scripts/rsync_nextcloud_data.sh
+    exportfs -r
+    exportfs -s
+#    tar -C /srv/nfs/backup/nextcloud/ -xzf /srv/nfs/backup/nextcloud.tar
+#    cp -r /srv/nfs/backup/nextcloud/data/ /srv/nfs/nextcloud/
+#    chown -R nogroup:nogroup /srv/nfs/nextcloud/data/
+#    chmod 0777 /srv/nfs/nextcloud/data/
