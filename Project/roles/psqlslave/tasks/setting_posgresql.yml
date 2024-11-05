@@ -1,0 +1,86 @@
+- name: copy repmgr.conf
+  template:
+    src: templates/repmgr_slave.conf.j2
+    dest: /etc/repmgr.conf
+
+- name: Copy templates file for PostgreSQL slave
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: 'templates/pg_hba_slave.conf.j2', dest: '/etc/postgresql/16/main/pg_hba.conf'}
+    - { src: 'templates/postgresql_slave.conf.j2', dest: '/etc/postgresql/16/main/postgresql.conf'}
+
+- name: Restart Postgresql
+  systemd:
+    name: postgresql
+    state: restarted
+
+- name: Create a Superuser PostgreSQL database user
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    name: "{{ repmgr_user }}"
+    password: "{{ repmgr_password }}"
+    role_attr_flags: SUPERUSER
+    #encrypted: yes
+
+- name: "Create repmgr database"
+  become: yes
+  become_user: postgres
+  postgresql_db:
+    state: present
+    name: "repmgr"
+
+- name: GRANT ALL PRIVILEGES ON DATABASE
+  postgresql_privs:
+    db: repmgr
+    privs: ALL
+    type: database
+    role: repmgr
+
+- name: GRANT PRIVILEGES for repmgr
+  shell: |
+    psql -U postgres -c "ALTER USER repmgr SET search_path TO repmgr, public;"
+
+
+
+- name: Copy templates file for PostgreSQL slave
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: 'templates/pg_hba_slave.conf.j2', dest: '/etc/postgresql/16/main/pg_hba.conf'}
+    - { src: 'templates/postgresql_slave.conf.j2', dest: '/etc/postgresql/16/main/postgresql.conf'}
+
+- name: stop postgresql-server on slave
+  systemd:
+    name: postgresql
+    state: stopped
+
+- name: Remove files from data catalog
+  file:
+    path: /var/lib/postgresql/16/main/
+    state: absent
+
+- name: copy files from master to slave
+  become_user: postgres
+  expect:
+    command: 'pg_basebackup -l "repmgr base backup"  -D /var/lib/postgresql/16/main -h 192.168.255.30 -p 5432 -U repmgr -X stream'
+    responses:
+      '.*Password*': "{{ repmgr_password }}"
+
+- name: Clone slave in cluster
+  become_user: postgres
+  shell: |
+    repmgr -h 192.168.255.30 -U repmgr -d repmgr -f /etc/repmgr.conf standby clone -F
+
+- name: Restart Postgresql
+  systemd:
+    name: postgresql
+    state: restarted
+
+- name: Reg slave in cluster
+  become_user: postgres
+  shell: |
+    repmgr -f /etc/repmgr.conf standby register -F

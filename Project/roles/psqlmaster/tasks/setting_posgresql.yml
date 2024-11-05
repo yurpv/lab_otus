@@ -1,0 +1,164 @@
+
+
+- name: copy postgresql configs
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: postgres
+    group: postgres
+    mode: '0600'
+  with_items:
+    - { src: 'templates/postgresql_master.conf.j2', dest: '/etc/postgresql/16/main/postgresql.conf'}
+    - { src: 'templates/pg_hba_master.conf.j2', dest: '/etc/postgresql/16/main/pg_hba.conf'}
+
+- name: copy repmgr.conf
+  template:
+    src: templates/repmgr_master.conf.j2
+    dest: /etc/repmgr.conf
+
+
+#- name: copy postgresql.conf
+#  template:
+#    src: postgresql_master.conf.j2
+#    dest: /etc/postgresql/16/main/postgresql.conf
+#    owner: postgres
+#    group: postgres
+#    mode: '0600'
+
+#- name: copy pg_hba.conf
+#  template:
+#    src: pg_hba_master.conf.j2
+#    dest: /etc/postgresql/16/main/pg_hba.conf
+#    owner: postgres
+#    group: postgres
+#    mode: '0600'
+
+- name: Restart Postgresql
+  systemd:
+    name: postgresql
+    state: restarted
+
+- name: Create a Superuser PostgreSQL database user
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    name: "{{ repmgr_user }}"
+    password: "{{ repmgr_password }}"
+    role_attr_flags: SUPERUSER
+    encrypted: yes
+
+- name: Create barman user
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    name: barman
+    password: '{{ barman_user_password }}'
+    role_attr_flags: SUPERUSER
+
+- name: Create stream_barman user
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    name: streaming_barman
+    password: '{{ stream_barman_user_pass }}'
+    role_attr_flags: REPLICATION
+
+
+- name: "Create barman database"
+  become: yes
+  become_user: postgres
+  postgresql_db:
+    state: present
+    name: "barman"
+
+- name: "Create repmgr database"
+  become: yes
+  become_user: postgres
+  postgresql_db:
+    state: present
+    name: "repmgr"
+
+- name: "Create nextcloud database"
+  become: yes
+  become_user: postgres
+  postgresql_db:
+    state: present
+    name: "{{ db_name }}"
+
+- name: "Create replication database"
+  become: yes
+  become_user: postgres
+  postgresql_db:
+    state: present
+    name: "replication"
+
+#- name: GRANT ALL PRIVILEGES ON DATABASE
+#  postgresql_privs:
+#    db: replication
+#    privs: ALL
+#    type: database
+#    role: replication
+
+- name: GRANT ALL PRIVILEGES ON DATABASE
+  postgresql_privs:
+    db: repmgr
+    privs: ALL
+    type: database
+    role: repmgr
+
+- name: GRANT PRIVILEGES for repmgr
+  shell: |
+    psql -U postgres -c "ALTER USER repmgr SET search_path TO repmgr, public;"
+
+- name: GRANT ALL PRIVILEGES ON DATABASE nextcloud
+  postgresql_privs:
+    db: nextcloud
+    privs: ALL
+    type: database
+    role: postgres
+
+- name: GRANT ALL PRIVILEGES ON DATABASE barman
+  postgresql_privs:
+    db: barman
+    privs: ALL
+    type: database
+    role: barman
+
+- name: Restore dump base nextcloud
+  postgresql_db:
+    name: nextcloud
+    login_user: postgres
+    login_password: 'P@ssw0rd'
+    state: restore
+    target: '/mnt/backup/psqlmaster/nextcloud-sqlbkp.sql'
+
+
+#- name: "Create db user"
+#  become: yes
+#  become_user: postgres
+#  postgresql_user:
+#    name: "{{ nextcloud_db_user }}"
+#    password: "{{ nextcloud_db_password }}"
+#    role_attr_flags: SUPERUSER
+#    state: present
+
+#- name: "Grant db user access to app db"
+#  become: yes
+#  become_user: postgres
+#  postgresql_privs:
+#    type: database
+#    database: "{{ db_name }}"
+#    roles: "{{ nextcloud_db_user }}"
+#    grant_option: yes
+#    privs: all
+
+
+- name: Restart Postgresql
+  systemd:
+    name: postgresql
+    state: restarted
+
+- name: Reg master in cluster
+  become_user: postgres
+  shell: |
+    /usr/bin/repmgr -f /etc/repmgr.conf primary register

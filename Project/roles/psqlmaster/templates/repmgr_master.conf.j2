@@ -1,0 +1,13 @@
+# repmgr.conf for psqlmaster
+cluster='failover'
+
+node_id=1
+node_name= psqlmaster
+conninfo ='host=192.168.255.30 dbname=repmgr user=repmgr connect_timeout=2'
+data_directory = '/var/lib/postgresql/16/main/'
+
+failover=automatic
+
+promote_command='/usr/bin/repmgr standby promote -f /etc/repmgr.conf --log-to-file'
+
+follow_command='/usr/bin/repmgr standby follow -f /etc/repmgr.conf --log-to-file --upstream-node-id=%n'
