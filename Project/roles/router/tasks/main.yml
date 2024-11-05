@@ -1,0 +1,36 @@
+---
+# tasks file for Router
+- name: Prepare For Install Router
+  include_tasks:
+    file: prepare.yml
+    apply:
+      tags: prepare
+  tags: prepare
+
+- name: Install UFW
+  include_tasks:
+    file: setting_ufw.yml
+    apply:
+      tags: ufw
+  tags: ufw
+
+- name: Install Node_exporter
+  include_tasks:
+    file: install_node_exporter.yml
+    apply:
+      tags: node_exporter
+  tags: node_exporter
+
+- name: Install DNSmasq
+  include_tasks:
+    file: install_dnsmasq.yml
+    apply:
+      tags: dnsmasq
+  tags: dnsmasq
+
+- name: Install Nginx
+  include_tasks:
+    file: install_haproxy.yml
+    apply:
+      tags: haproxy
+  tags: haproxy

@@ -1,0 +1,20 @@
+---
+# tasks file for Router
+
+- name: Install haproxy
+  apt:
+    name: haproxy
+    state: latest
+
+
+- name: Create Haproxy config file from template
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: 'templates/haproxy.cfg.j2', dest: '/etc/haproxy/haproxy.cfg'}
+
+- name: "Restart haproxy server"
+  service:
+    name: "haproxy"
+    state: "restarted"

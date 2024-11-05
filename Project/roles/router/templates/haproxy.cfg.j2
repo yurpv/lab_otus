@@ -1,0 +1,28 @@
+global
+    stats socket /run/haproxy/admin.sock mode 660 level admin
+defaults
+    mode http
+    timeout client 5s
+    timeout connect 5s
+    timeout server 5s
+    timeout http-request 5s
+
+frontend nextcloud_frontend
+        mode http
+        bind *:80
+        acl url_cloud path_beg /nextcloud
+        use_backend nextcloud_backend if url_cloud
+        default_backend nextcloud_backend
+
+backend nextcloud_backend
+        balance leastconn
+        server 192.168.255.20 nextcloud1.home.local:80 check
+        server 192.168.255.21 nextcloud2.home.local:80 check
+
+listen stats
+        bind :8000
+        stats enable
+        stats uri /
+        stats refresh 5s
+        stats realm Haproxy\ Stats
+        stats auth admin:P@ssw0rd
