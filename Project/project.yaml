@@ -5,6 +5,13 @@
   roles:
     - role: router
 
+
+- name: Configure nfs server
+  hosts: nfs
+  become: yes
+  roles:
+    - role: nfs
+
 - name: Configure Web server
   hosts: web1
   become: yes
@@ -29,20 +36,14 @@
   roles:
     - role: psqlslave
 
-- name: Configure srvmon server
-  hosts: srvmon
-  become: yes
-  roles:
-    - role: srvmon
-
 - name: Configure barman server
   hosts: srvbackup
   become: yes
   roles:
     - role: srvbackup
 
-- name: Configure nfs server
-  hosts: nfs
+- name: Configure srvmon server
+  hosts: srvmon
   become: yes
   roles:
-    - role: nfs
+    - role: srvmon
