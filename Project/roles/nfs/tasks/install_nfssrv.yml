@@ -1,10 +1,4 @@
 ---
-#- name: Create User Nogroup
-#  user:
-#    name: nogroup
-#    create_home: no
-#    shell: /bin/false
-
 - name: Install NFS
   package:
     name: nfs-kernel-server
@@ -14,8 +8,6 @@
   file:
     path: "{{ item }}"
     state: directory
-    owner: nogroup
-    group: nogroup
   loop:
     - '/srv/nfs'
     - '/srv/nfs/nextcloud/'
